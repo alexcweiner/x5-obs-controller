@@ -2,6 +2,10 @@
 
 A tiny local remote that turns an Insta360 X5's stitched 360° webcam feed into a steerable camera view in OBS. Drag the trackball, adjust zoom, or glide between three named shots. Collapse it to saved spots and float it above your other windows.
 
+<p align="center">
+  <img src="docs/controller.jpg" width="320" alt="X5 View Remote with a draggable trackball, arrow controls, zoom and horizon knobs, saved spots, and glide speed and easing controls">
+</p>
+
 No npm dependencies, cloud services, or API keys. This repo contains the frontend, local OBS bridge, shader, setup utility, and tests—not the OBS plugin itself.
 
 ## Requirements
