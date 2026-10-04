@@ -3,7 +3,7 @@ uniform string notes< string widget_type = "info"; > = "Requires stitched 2880x1
 uniform float Yaw< string widget_type = "slider"; float minimum = -180.0; float maximum = 180.0; float step = 0.1; > = 0.0;
 uniform float Pitch< string widget_type = "slider"; float minimum = -180.0; float maximum = 180.0; float step = 0.1; > = 0.0;
 uniform float Roll< string widget_type = "slider"; float minimum = -180.0; float maximum = 180.0; float step = 0.1; > = 0.0;
-uniform float Field_Of_View< string widget_type = "slider"; float minimum = 40.0; float maximum = 130.0; float step = 0.1; > = 95.0;
+uniform float Field_Of_View< string widget_type = "slider"; float minimum = 10.0; float maximum = 130.0; float step = 0.1; > = 95.0;
 sampler_state panoramaSampler {
     Filter = Linear;
     AddressU = Wrap;

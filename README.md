@@ -76,7 +76,7 @@ The remote discovers the filter by this filename. Use one matching source/filter
 | Arrow buttons / keyboard arrows | Aim; hold for repeated movement |
 | Q / E | Roll left / right |
 | Shift | Fine movement |
-| Zoom knob / + / − | Adjust field of view, bounded to 40–130° |
+| Zoom knob / + / − | Adjust field of view, bounded to 10–130° |
 | Reset view | Return to the view captured when the page connected |
 | Empty saved spot | Save current framing |
 | Saved spot click | Glide to that framing |

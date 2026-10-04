@@ -1,4 +1,6 @@
 import http from 'node:http';
+import {createUISync} from './ui-sync.mjs';
+const handleUISync=createUISync();
 import {readFile} from 'node:fs/promises';
 import {call} from '../lib/obs.mjs';
 const port=4785, base=`http://127.0.0.1:${port}`;
@@ -9,7 +11,7 @@ async function findTarget(){
  for(const input of inputs){const {filters}=await call('GetSourceFilterList',{sourceName:input.inputName});const f=filters.find(f=>f.filterKind==='shader_filter'&&String(f.filterSettings.shader_file_name).endsWith('insta360-x5-flat-view.shader'));if(f){target={sourceName:input.inputName,filterName:f.filterName};return target;}}
  throw Error('X5 view shader not found in OBS. Load insta360-x5-flat-view.shader on the X5 source.');
 }
-const limits={Yaw:[-180,180,0],Pitch:[-180,180,0],Roll:[-180,180,0],Field_Of_View:[40,130,95]};
+const limits={Yaw:[-180,180,0],Pitch:[-180,180,0],Roll:[-180,180,0],Field_Of_View:[10,130,95]};
 async function state(){const t=await findTarget();const f=await call('GetSourceFilter',t);return {...t,enabled:f.filterEnabled,view:Object.fromEntries(Object.entries(limits).map(([k,v])=>[k,f.filterSettings[k]??v[2]]))};}
 const server=http.createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
@@ -17,6 +19,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.headers.host!==`127.0.0.1:${port}`&&req.headers.host!==`localhost:${port}`){res.writeHead(403);return res.end();}
   if(req.headers.origin&&!['http://localhost:'+port,base].includes(req.headers.origin)){res.writeHead(403);return res.end();}
   const path=new URL(req.url,base).pathname;
+  if(await handleUISync(req,res,path))return;
   if(req.method==='GET'&&path==='/'){res.setHeader('Content-Type','text/html');return res.end(await readFile(new URL('./index.html',import.meta.url)));}
   if(req.method==='GET'&&path==='/api/state'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(await state()));}
   if(req.method==='GET'&&path==='/api/health'){
@@ -36,7 +39,7 @@ const server=http.createServer(async(req,res)=>{
    if(req.headers['content-type']!=='application/json')throw Error('Expected JSON');
    let body='';for await(const chunk of req){body+=chunk;if(body.length>2048)throw Error('Request too large');}
    const input=JSON.parse(body),filterSettings={};
-   for(const [k,v]of Object.entries(input)){if(!limits[k]||typeof v!=='number'||!Number.isFinite(v))throw Error('Invalid view setting');filterSettings[k]=k==='Field_Of_View'?Math.max(40,Math.min(130,v)):((v+180)%360+360)%360-180;}
+   for(const [k,v]of Object.entries(input)){if(!limits[k]||typeof v!=='number'||!Number.isFinite(v))throw Error('Invalid view setting');filterSettings[k]=k==='Field_Of_View'?Math.max(10,Math.min(130,v)):((v+180)%360+360)%360-180;}
    await call('SetSourceFilterSettings',{...await findTarget(),filterSettings,overlay:true});
    res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(await state()));
   }
