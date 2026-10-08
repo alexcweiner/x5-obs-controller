@@ -5,26 +5,22 @@
 /* Compact floating remote; the same controls move into the PiP window. */
 body{font-size:12px}main{max-width:320px;padding:12px;margin:0 auto}header{margin-bottom:10px;gap:8px}.brand{font-size:18px}.brand span{display:none}#status{font-size:10px;padding:4px 7px;background:none}.layout{display:block}.panel.control{padding:12px;border-radius:14px}.control>h2,.control>small,.control>.help,.control>hr{display:none}.control .pad{grid-template-columns:repeat(3,42px);grid-template-rows:repeat(3,34px);gap:4px;margin:0 0 10px}button{padding:6px;border-radius:8px;font-size:12px}.home{font-size:10px}.control h2{font-size:12px;margin:0}.control input[type=range]{margin:7px 0 9px}.control>.row[style]{margin-top:10px!important}.control>.row{gap:6px}.control>.row:nth-of-type(3){margin-top:10px}.presets{padding:0;border:0;background:none;margin-top:10px}.presets>h2,.presets>small,.presets>.help{display:none}.presets .row{gap:5px;margin:0;flex-wrap:nowrap}.presets button{min-width:0;flex:1;font-size:11px}.help{font-size:11px;margin:10px 0}.error{font-size:11px;margin:8px 0}#float{width:100%;margin:10px 0 0;background:#b9d99b;color:#172014}#pipHint{color:#93a198;font-size:11px;line-height:1.4;margin:8px 0}body.floating main{max-width:none;padding:8px}body.floating #float,body.floating #pipHint{display:none}
 .knobs{display:flex;justify-content:space-around;margin:12px 0;gap:12px}.knob-group{text-align:center;display:grid;justify-items:center;gap:5px}.knob{width:72px;height:72px;border-radius:50%;border:2px solid #64765d;background:radial-gradient(circle,#354432 0 48%,#202a23 50% 65%,#45513e 67%);position:relative;touch-action:none;cursor:grab;user-select:none;outline-offset:4px}.knob:focus-visible{outline:2px solid #c2e39e}.knob.dragging{cursor:grabbing;border-color:#c2e39e}.knob-indicator{position:absolute;inset:5px;transform:rotate(var(--angle,0deg));pointer-events:none}.knob-indicator:before{content:'';position:absolute;top:0;left:calc(50% - 2px);width:4px;height:15px;background:#d4efb5;border-radius:3px}.knob-group small{font-size:10px}
-#compactToggle{font-size:10px;white-space:nowrap;padding:5px 7px}main.compact .control,main.compact #pipHint{display:none}main.compact header{margin-bottom:6px}main.compact .presets{margin-top:0}main.compact #status{display:none}main.compact .brand{font-size:13px}main.compact #float{font-size:10px;margin-top:6px;padding:4px}main.compact{padding:8px}
+#compactToggle,#followToggle{font-size:10px;white-space:nowrap;padding:5px 7px}#followToggle{margin-left:auto}#followToggle.on{background:#c2e39e;color:#182215}#followView{display:block;width:100%;aspect-ratio:2;border-radius:10px;background:#090c0b;margin:0 0 8px}#followView[hidden]{display:none}main.compact .control,main.compact #pipHint{display:none}main.compact header{margin-bottom:6px}main.compact .presets{margin-top:0}main.compact #status{display:none}main.compact .brand{font-size:13px}main.compact #float{font-size:10px;margin-top:6px;padding:4px}main.compact{padding:8px}
 #status{display:none}.brand.status-button{background:none;border:0;padding:0;color:#fa9b8f;font-weight:700}.brand.status-button.good{color:#b9df94}.glide-options{display:flex;gap:8px;margin:7px 0;font-size:10px}.glide-options label{font-size:10px;flex:1}.glide-options select{width:100%;font-size:11px}.presets button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}dialog{max-width:280px;width:calc(100% - 24px);background:#202a23;color:#eef3ec;border:1px solid #64765d;border-radius:12px;padding:14px}dialog::backdrop{background:#0008}dialog input{width:100%;margin:8px 0;padding:8px}dialog p{white-space:pre-line;font-size:12px}dialog .row{flex-wrap:wrap}
 main.compact .glide-options{display:none}
 body.floating{overflow:auto}dialog{max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box}
 </style>
 <main><header><div class="brand">X5 <span>/ view control</span></div><div id="status" role="status">Connecting to OBS…</div></header><div id="message" class="error" role="alert"></div><div class="layout"><section><div class="panel"><div class="preview"><span class="muted">Your X5 preview will appear here</span><img id="preview" alt="Live filtered X5 camera preview"><span class="tag">X5 · LIVE PREVIEW</span></div><div class="foot"><span id="source">Waiting for camera</span><span>960px preview · ~4 fps</span></div></div><div class="panel presets"><h2>Saved angles</h2><small>Save a view, then jump back with one click.</small><div class="row" id="presets"></div><p class="help">Save your favorite framing before exploring. Home returns to the view from when this page connected.</p></div><p class="help">Hold the D-pad or use <span class="keys">↑ ↓ ← →</span> to look around. <span class="keys">− +</span> zoom. Changes apply directly to the X5 source in OBS.</p></section><aside class="panel control"><h2>Look around</h2><small>Your camera stays put. Your view moves.</small><div class="pad"><button class="up" data-key="Pitch" data-step="2" aria-label="Look up">↑</button><button class="left" data-key="Yaw" data-step="-2" aria-label="Look left">←</button><button class="home" id="home" title="Return to initial view">Home</button><button class="right" data-key="Yaw" data-step="2" aria-label="Look right">→</button><button class="down" data-key="Pitch" data-step="-2" aria-label="Look down">↓</button></div><div class="row"><label>Movement speed</label><select id="speed" aria-label="Movement speed"><option value="0.3">Fine</option><option value="1" selected>Normal</option><option value="2.5">Fast</option></select></div><hr style="border:0;border-top:1px solid #303c33;margin:24px 0"><div class="row"><h2>Zoom</h2><span id="fovValue" class="readout"></span></div><input aria-label="Zoom" id="zoom" type="range" min="10" max="130" step="0.1"><div class="row"><button data-key="Field_Of_View" data-step="2" aria-label="Zoom out">−</button><small>Wide ↔ Close</small><button data-key="Field_Of_View" data-step="-2" aria-label="Zoom in">+</button></div><div class="row" style="margin-top:26px"><label for="roll">Horizon</label><span id="rollValue" class="readout"></span></div><input id="roll" type="range" min="-30" max="30" step="0.1"><div class="row"><label>Pan / tilt</label><span class="readout" id="angles">—</span></div><p class="help">Preview shows the filtered camera source. OBS canvas placement and desktop overlays are separate.</p></aside></div></main>
+<script src="/shared/remote-shell.js"></script>
 <script>
 const remote=document.querySelector('main');
 const layout=remote.querySelector('.layout'),saved=remote.querySelector('.presets');
 layout.querySelector('section').remove();layout.append(saved);
-const floatButton=document.createElement('button');floatButton.id='float';floatButton.textContent='↗ Float above other windows';remote.append(floatButton);
-const pipHint=document.createElement('p');pipHint.id='pipHint';remote.append(pipHint);
-const $=id=>remote.querySelector('#'+id);let view,home,dirty=false,sending=false,connected=false,hold,pipWindow;
-let compact=false;try{compact=localStorage.getItem('x5-compact')==='true';}catch{}
-const compactToggle=document.createElement('button');compactToggle.id='compactToggle';compactToggle.setAttribute('aria-controls','viewControls');remote.querySelector('.control').id='viewControls';remote.querySelector('header').append(compactToggle);
-function setCompact(value,resize=false){compact=value;stop();dragBall=null;remote.classList.toggle('compact',compact);compactToggle.textContent=compact?'▾ Expand':'▴ Saved spots only';compactToggle.setAttribute('aria-expanded',String(!compact));compactToggle.title=compact?'Show all camera controls':'Collapse to saved spots';try{localStorage.setItem('x5-compact',String(compact));}catch{}if(resize)fitPopout();}
-function popoutBounds(contentHeight,chromeWidth,chromeHeight,screen,x,y){const left=screen.availLeft||0,top=screen.availTop||0,width=Math.min(320+chromeWidth,screen.availWidth),height=Math.min(Math.ceil(contentHeight)+chromeHeight,screen.availHeight);return {width,height,x:Math.max(left,Math.min(x,left+screen.availWidth-width)),y:Math.max(top,Math.min(y,top+screen.availHeight-height))};}
-function fitPopout(){if(!pipWindow||pipWindow.closed)return;const w=pipWindow;const chromeHeight=Math.max(0,w.outerHeight-w.innerHeight),chromeWidth=Math.max(0,w.outerWidth-w.innerWidth);let height=remote.getBoundingClientRect().height;if(popup.open)height=Math.max(height,popup.scrollHeight+32);const bounds=popoutBounds(height,chromeWidth,chromeHeight,w.screen,w.screenX,w.screenY);try{w.resizeTo(bounds.width,bounds.height);if(w.screenX!==bounds.x||w.screenY!==bounds.y)w.moveTo(bounds.x,bounds.y);}catch{}}
-let layoutWrites=Promise.resolve();
-compactToggle.onclick=()=>{setCompact(!compact,true);const value=compact;layoutWrites=layoutWrites.then(()=>api('ui',{compact:value})).catch(e=>{$('message').textContent='Layout sync failed: '+e.message;});};
+const $=id=>remote.querySelector('#'+id);let view,home,dirty=false,sending=false,connected=false,hold,followPausedUntil=0;
+remote.querySelector('.control').id='viewControls';
+const shell=createRemoteShell({root:remote,header:remote.querySelector('header'),storageKey:'x5-compact',title:'X5 remote',controlsId:'viewControls',
+ collapseLabel:'▴ Saved spots only',collapseTitle:'Collapse to saved spots',expandTitle:'Show all camera controls',
+ onCompact:()=>{stop();dragBall=null;},onStop:()=>stop(),onKey:e=>onKey(e),extraHeight:()=>popup.open?popup.scrollHeight+32:0,onError:text=>{$('message').textContent=text;}});
 const ballArea=document.createElement('div');ballArea.style.cssText='display:grid;justify-items:center;gap:4px;margin-bottom:10px';
 ballArea.innerHTML='<canvas id="trackball" width="360" height="360" tabindex="0" aria-label="Rotate view: drag globe to aim, outer ring to roll. Arrow keys aim, Q and E roll." style="width:180px;height:180px;touch-action:none;cursor:grab;border-radius:50%"></canvas><small>Drag globe to aim · outer ring to roll</small><button id="home">Reset view</button>';
 remote.querySelector('.pad').replaceWith(ballArea);
@@ -44,7 +40,7 @@ function axisQuat(axis,angle){const s=Math.sin(angle/2);return [...axis.map(v=>v
 function orientation(v){const k=Math.PI/180;return multiply(multiply(axisQuat([0,1,0],v.Yaw*k),axisQuat([1,0,0],v.Pitch*k)),axisQuat([0,0,1],v.Roll*k));}
 function matrix(q){const n=Math.hypot(...q),[x,y,z,w]=q.map(v=>v/n);return [1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w),2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w),2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)];}
 function angles(q){const m=matrix(q),p=Math.asin(Math.max(-1,Math.min(1,-m[5]))),regular=Math.abs(Math.cos(p))>1e-7,k=180/Math.PI;return {Pitch:p*k,Yaw:Math.atan2(regular?m[2]:-m[6],regular?m[8]:m[0])*k,Roll:regular?Math.atan2(m[3],m[4])*k:0};}
-function rotateLocal(q){if(!connected||!view)return;glide=null;Object.assign(view,angles(multiply(orientation(view),q)));dirty=true;render();}
+function rotateLocal(q){if(!connected||!view)return;glide=null;followPausedUntil=performance.now()+2000;Object.assign(view,angles(multiply(orientation(view),q)));dirty=true;render();}
 function spherePoint(x,y){const d=x*x+y*y;return d<=1?[x,y,Math.sqrt(1-d)]:[x/Math.sqrt(d),y/Math.sqrt(d),0];}
 function arcRotation(a,b,gain){const cross=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],length=Math.hypot(...cross);if(length<1e-9)return [0,0,0,1];return axisQuat(cross.map(v=>v/length),Math.atan2(length,a.reduce((s,v,i)=>s+v*b[i],0))*gain);}
 const ball=$('trackball');let dragBall=null;
@@ -64,43 +60,30 @@ for(const [id,label,readout] of [['zoom','Zoom','fovValue'],['roll','Horizon','r
  if(id==='zoom')input.nextElementSibling.remove();heading.remove();input.remove();
 }
 remote.querySelector('.control').insertBefore(knobs,$('angles').parentElement);
-pipHint.textContent='documentPictureInPicture' in window?'Open the floating remote, then drag it anywhere. Keep this tab open.':'For always-on-top controls, open this address in Chrome or Edge and click Float.';
-floatButton.onclick=async()=>{
- if(!('documentPictureInPicture' in window)){pipHint.textContent='This browser does not support control panels in PiP. Open http://127.0.0.1:4785 in Chrome or Edge.';return;}
- try{
-  if(pipWindow&&!pipWindow.closed){pipWindow.focus();return;}
-  stop();pipWindow=await window.documentPictureInPicture.requestWindow({width:320,height:Math.min(compact?76:700,window.screen.availHeight)});
-  pipWindow.document.title='X5 remote';
-  document.querySelectorAll('style').forEach(s=>pipWindow.document.head.append(s.cloneNode(true)));
-  pipWindow.document.body.className='floating';pipWindow.document.body.append(remote);fitPopout();
-  pipWindow.addEventListener('keydown',onKey);pipWindow.addEventListener('blur',stop);
-  pipWindow.addEventListener('pagehide',()=>{stop();document.body.prepend(remote);pipWindow=null;},{once:true});
- }catch(e){pipHint.textContent='Could not open floating remote: '+e.message;}
-};
 let presets;try{presets=JSON.parse(localStorage.getItem('x5-presets')||'[]')}catch{presets=[]}if(!Array.isArray(presets))presets=[];
 let glide=null,glidePrefs={duration:1.5,ease:'smooth'};try{Object.assign(glidePrefs,JSON.parse(localStorage.getItem('x5-glide')||'{}'));}catch{}
 const glideOptions=document.createElement('div');glideOptions.className='glide-options';glideOptions.innerHTML='<label>Glide speed<select id="glideSpeed"><option value="0">Cut</option><option value="0.5">Fast · ½s</option><option value="1.5">Normal · 1½s</option><option value="3">Slow · 3s</option><option value="5">Very slow · 5s</option></select></label><label>Ease<select id="glideEase"><option value="linear">Linear</option><option value="smooth">Smooth in/out</option><option value="out">Ease out</option></select></label>';saved.append(glideOptions);
 $('glideSpeed').value=String(glidePrefs.duration);$('glideEase').value=glidePrefs.ease;
 glideOptions.onchange=()=>{glidePrefs={duration:Number($('glideSpeed').value),ease:$('glideEase').value};localStorage.setItem('x5-glide',JSON.stringify(glidePrefs));};
 function slerp(a,b,t){let dot=a.reduce((s,v,i)=>s+v*b[i],0);if(dot<0){b=b.map(v=>-v);dot=-dot;}if(dot>.9995){const q=a.map((v,i)=>v+(b[i]-v)*t),n=Math.hypot(...q);return q.map(v=>v/n);}const theta=Math.acos(Math.min(1,dot)),sin=Math.sin(theta);return a.map((v,i)=>(v*Math.sin((1-t)*theta)+b[i]*Math.sin(t*theta))/sin);}
-function recall(destination){if(!connected)return;stop();glide={from:{...view},to:{...destination},start:performance.now(),duration:glidePrefs.duration*1000,ease:glidePrefs.ease};advanceGlide();}
+function recall(destination){if(!connected)return;stop();followPausedUntil=performance.now()+2000;glide={from:{...view},to:{...destination},start:performance.now(),duration:glidePrefs.duration*1000,ease:glidePrefs.ease};advanceGlide();}
 function advanceGlide(){if(!glide)return;const g=glide,t=g.duration?Math.min(1,(performance.now()-g.start)/g.duration):1,u=g.ease==='smooth'?t*t*(3-2*t):g.ease==='out'?1-(1-t)**3:t;view={...angles(slerp(orientation(g.from),orientation(g.to),u)),Field_Of_View:g.from.Field_Of_View+(g.to.Field_Of_View-g.from.Field_Of_View)*u};if(t===1){view={...g.to};glide=null;}dirty=true;render();}
-const popup=document.createElement('dialog');remote.append(popup);popup.addEventListener('close',()=>fitPopout());
+const popup=document.createElement('dialog');remote.append(popup);popup.addEventListener('close',()=>shell.fit());
 function openPopup(title){popup.replaceChildren();const h=document.createElement('strong');h.textContent=title;popup.append(h);if(!popup.open)popup.showModal();}
-function closePopup(){const b=document.createElement('button');b.textContent='Close';b.onclick=()=>popup.close();popup.append(b);fitPopout();}
+function closePopup(){const b=document.createElement('button');b.textContent='Close';b.onclick=()=>popup.close();popup.append(b);shell.fit();}
 let statusDetails=['Checking OBS and camera…'];const badge=document.createElement('button');badge.className='brand status-button';badge.textContent='X5';badge.title='Camera status';remote.querySelector('.brand').replaceWith(badge);
 badge.onclick=()=>{openPopup('X5 status');const p=document.createElement('p');p.textContent=statusDetails.join('\n');popup.append(p);closePopup();};
-async function checkHealth(){try{const h=await api('health');badge.classList.toggle('good',h.ok);statusDetails=h.details;}catch(e){badge.classList.remove('good');statusDetails=['OBS/controller unavailable',e.message];}badge.setAttribute('aria-label','X5: '+(badge.classList.contains('good')?'ready':'needs attention')+'. Show status');(pipWindow&&!pipWindow.closed?pipWindow:window).setTimeout(checkHealth,3000);}checkHealth();
+async function checkHealth(){try{const h=await api('health');badge.classList.toggle('good',h.ok);statusDetails=h.details;}catch(e){badge.classList.remove('good');statusDetails=['OBS/controller unavailable',e.message];}badge.setAttribute('aria-label','X5: '+(badge.classList.contains('good')?'ready':'needs attention')+'. Show status');shell.activeWindow().setTimeout(checkHealth,3000);}checkHealth();
 function editPreset(i){glide=null;openPopup('Saved spot '+(i+1));const input=document.createElement('input');input.maxLength=24;input.setAttribute('aria-label','Preset name');input.value=presets[i]?.name||'Angle '+(i+1);popup.append(input);const actions=document.createElement('div');actions.className='row';popup.append(actions);for(const [label,replace]of [['Rename',false],['Save current view',true]]){const b=document.createElement('button');b.textContent=label;b.disabled=replace?!connected:!presets[i];b.onclick=()=>{presets[i]={...(replace?view:presets[i]),name:input.value.trim()||'Angle '+(i+1)};localStorage.setItem('x5-presets',JSON.stringify(presets));drawPresets();popup.close();};actions.append(b);}closePopup();input.focus();}
 async function api(path,body){const r=await fetch('/api/'+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const d=await r.json();if(!r.ok)throw Error(d.error);return d;}
 function error(e){glide=null;badge.classList.remove('good');$('message').textContent=e.message;$('status').textContent='OBS disconnected';connected=false;stop();}
 function render(){if(!view)return;drawBall();for(const [id,value,angle]of [['zoom',view.Field_Of_View,(130-view.Field_Of_View)*3],['roll',view.Roll,view.Roll]]){$(id).style.setProperty('--angle',angle+'deg');$(id).setAttribute('aria-valuenow',value.toFixed(1));$(id).setAttribute('aria-valuetext',value.toFixed(1)+(id==='zoom'?' degrees field of view':' degrees horizon'));}$('fovValue').textContent=view.Field_Of_View.toFixed(1)+'° FOV';$('rollValue').textContent=view.Roll.toFixed(1)+'°';$('angles').textContent=view.Yaw.toFixed(1)+'° / '+view.Pitch.toFixed(1)+'°';}
-function change(key,delta){if(!connected||!view)return;glide=null;if(key!=='Field_Of_View'){rotateLocal(axisQuat(key==='Yaw'?[0,1,0]:key==='Pitch'?[1,0,0]:[0,0,1],delta*Math.PI/180));return;}view[key]=Math.min(130,Math.max(10,view[key]+delta));dirty=true;render();}
+function change(key,delta){if(!connected||!view)return;glide=null;if(key!=='Field_Of_View'){rotateLocal(axisQuat(key==='Yaw'?[0,1,0]:key==='Pitch'?[1,0,0]:[0,0,1],delta*Math.PI/180));return;}followPausedUntil=performance.now()+2000;view[key]=Math.min(130,Math.max(10,view[key]+delta));dirty=true;render();}
 function stop(){clearInterval(hold);hold=null;remote.querySelectorAll('.active').forEach(b=>b.classList.remove('active'));}
 document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();stop();b.setPointerCapture(e.pointerId);b.classList.add('active');const step=()=>change(b.dataset.key,Number(b.dataset.step)*Number($('speed').value)*(e.shiftKey?0.1:1));step();hold=setInterval(step,60);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=stop;b.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();change(b.dataset.key,Number(b.dataset.step)*Number($('speed').value)*(e.shiftKey?0.1:1));}};});
 window.addEventListener('blur',stop);document.addEventListener('visibilitychange',stop);
 const keys={q:['Roll',-2],e:['Roll',2],ArrowUp:['Pitch',2],ArrowDown:['Pitch',-2],ArrowLeft:['Yaw',-2],ArrowRight:['Yaw',2],'+':['Field_Of_View',-2],'=':['Field_Of_View',-2],'-':['Field_Of_View',2]};
-function onKey(e){if(popup.open||compact||e.ctrlKey||e.metaKey||e.altKey||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;const key=e.key.length===1?e.key.toLowerCase():e.key;if(keys[key]){e.preventDefault();const[k,d]=keys[key];change(k,d*Number($('speed').value)*(e.shiftKey?0.1:1));}}
+function onKey(e){if(popup.open||shell.compact||e.ctrlKey||e.metaKey||e.altKey||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;const key=e.key.length===1?e.key.toLowerCase():e.key;if(keys[key]){e.preventDefault();const[k,d]=keys[key];change(k,d*Number($('speed').value)*(e.shiftKey?0.1:1));}}
 window.addEventListener('keydown',onKey);
 function angularDelta(current,previous){return ((current-previous+180)%360+360)%360-180;}
 for(const id of ['zoom','roll']){
@@ -115,8 +98,93 @@ for(const id of ['zoom','roll']){
 }
 $('home').onclick=()=>{if(connected&&home)recall(home);};
 function drawPresets(){$('presets').replaceChildren();for(let i=0;i<3;i++){const b=document.createElement('button');b.textContent=presets[i]?(presets[i].name||'Angle '+(i+1)):'+ Save '+(i+1);b.title='Click to glide · Hold or right-click to name/save';let timer,long=false,start;const cancel=()=>clearTimeout(timer);b.onpointerdown=e=>{if(e.button!==0)return;long=false;start=[e.clientX,e.clientY];timer=setTimeout(()=>{long=true;editPreset(i);},550);};b.onpointermove=e=>{if(start&&Math.hypot(e.clientX-start[0],e.clientY-start[1])>8)cancel();};b.onpointerup=b.onpointercancel=b.onpointerleave=cancel;b.oncontextmenu=e=>{e.preventDefault();cancel();editPreset(i);};b.onclick=e=>{if(long){long=false;return;}if(e.shiftKey){editPreset(i);return;}if(!connected)return;if(!presets[i]){presets[i]={...view,name:'Angle '+(i+1)};localStorage.setItem('x5-presets',JSON.stringify(presets));drawPresets();}else{const {name,...destination}=presets[i];recall(destination);}};$('presets').append(b);}}drawPresets();
-async function tick(){try{if(!connected){const d=await api('state');view=d.view;home??={...view};connected=true;dirty=false;$('message').textContent=d.enabled?'':'The X5 filter is disabled in OBS. Enable it to see view changes.';$('status').textContent='● OBS connected';render();}advanceGlide();if(dirty&&!sending){dirty=false;sending=true;await api('view',view);sending=false;}}catch(e){sending=false;error(e);}(pipWindow&&!pipWindow.closed?pipWindow:window).setTimeout(tick,connected?60:2000);}tick();
-setCompact(compact);
-const layoutEvents=new EventSource('/api/ui/events');
-layoutEvents.onmessage=event=>{const state=JSON.parse(event.data);if(state.compact===null){layoutWrites=layoutWrites.then(()=>api('ui',{compact,initialize:true})).catch(e=>{$('message').textContent='Layout sync failed: '+e.message;});}else if(typeof state.compact==='boolean'&&state.compact!==compact)setCompact(state.compact,true);};
+async function tick(){try{if(!connected){const d=await api('state');view=d.view;home??={...view};connected=true;dirty=false;$('message').textContent=d.enabled?'':'The X5 filter is disabled in OBS. Enable it to see view changes.';$('status').textContent='● OBS connected';render();}advanceGlide();if(dirty&&!sending){dirty=false;sending=true;await api('view',view);sending=false;}}catch(e){sending=false;error(e);}shell.activeWindow().setTimeout(tick,connected?60:2000);}tick();
+shell.setCompact(shell.compact);
+// Follow: face detection on the filtered shot steers the view; two-hand push/pull zooms.
+const followButton=document.createElement('button');followButton.id='followToggle';followButton.title='Keep my face in frame · push both hands toward the camera to zoom out, pull them back to zoom in · open palms beside your face to focus on face and hands';followButton.setAttribute('aria-pressed','false');shell.compactToggle.before(followButton);
+const overlay=document.createElement('canvas');overlay.id='followView';overlay.width=480;overlay.height=240;overlay.hidden=true;overlay.setAttribute('aria-label','Follow tracking view: face, hands, and push/pull zoom meter');remote.querySelector('header').after(overlay);
+let vision,faceModel,handModel,tracking,followRun=0,reachBaseline=null,lastDetect=0,chosenFov=null,lostSince=null,savedFov=null,focusSeen=0;
+function setFollowLabel(text){followButton.textContent='◎ '+text;}setFollowLabel('Follow');
+async function loadModels(){
+ tracking??=await import('/tracking.mjs');if(faceModel&&handModel)return;
+ vision??=await import('/vendor/mediapipe/vision_bundle.mjs');
+ const files=await vision.FilesetResolver.forVisionTasks('/vendor/mediapipe/wasm');
+ const create=async(Task,model,extra)=>{const options=delegate=>({baseOptions:{modelAssetPath:'/vendor/mediapipe/'+model,delegate},runningMode:'VIDEO',...extra});try{return await Task.createFromOptions(files,options('GPU'));}catch{return Task.createFromOptions(files,options('CPU'));}};
+ // Low gates so a face with the forehead hidden (a hat) is still accepted.
+ faceModel??=await create(vision.FaceLandmarker,'face_landmarker.task',{numFaces:1,minFaceDetectionConfidence:.35,minFacePresenceConfidence:.35,minTrackingConfidence:.35});
+ handModel??=await create(vision.HandLandmarker,'hand_landmarker.task',{numHands:2});
+}
+function resetFollow(){reachBaseline=null;chosenFov=null;lostSince=null;savedFov=null;focusSeen=0;}
+function endFocus(){if(savedFov!==null){chosenFov=savedFov;savedFov=null;}}
+function showOverlay(show){overlay.hidden=!show;shell.fit();}
+function stopFollow(){followRun++;resetFollow();followButton.classList.remove('on');followButton.setAttribute('aria-pressed','false');setFollowLabel('Follow');showOverlay(false);}
+followButton.onclick=async()=>{
+ if(followButton.classList.contains('on')){stopFollow();return;}
+ const run=++followRun;followButton.classList.add('on');followButton.setAttribute('aria-pressed','true');setFollowLabel('Loading…');
+ try{await loadModels();}catch(e){stopFollow();$('message').textContent='Follow could not load the tracking models: '+e.message;return;}
+ if(run===followRun){setFollowLabel('Following');showOverlay(true);followStep(run);}
+};
+const followReady=()=>connected&&view&&!glide&&performance.now()>=followPausedUntil;
+// Palms beside the face frames face and hands; otherwise aim at the face and let a two-hand push/pull zoom.
+function applyFollow(face,hands,aspect){
+ const now=performance.now(),current=view.Field_Of_View;chosenFov??=current;
+ const facePoint=tracking.facePoint(face);
+ if(!facePoint){
+  endFocus();lostSince??=now;reachBaseline=null;
+  const fov=tracking.nextFov(current,{found:false,chosen:chosenFov,lostFor:now-lostSince});
+  setFollowLabel(fov>current?'Searching…':'Holding');if(fov!==current){view.Field_Of_View=fov;dirty=true;render();}
+  return {};
+ }
+ lostSince=null;
+ const focus=tracking.focusFrame(face,hands,{aspect,fov:current});
+ let zoom=null,point=facePoint,target,headroom=.4;
+ if(focus){focusSeen=now;savedFov??=chosenFov;reachBaseline=null;point=focus.point;target=focus.fov;headroom=.5;setFollowLabel('Focusing');}
+ else if(savedFov!==null&&now-focusSeen<400)return {point:facePoint,focusing:true};
+ else{
+  endFocus();setFollowLabel('Following');
+  zoom=tracking.zoomFromReach(reachBaseline,tracking.handReach(hands,face,{aspect}));reachBaseline=zoom.baseline;
+  chosenFov=Math.min(130,Math.max(10,chosenFov+zoom.step));target=chosenFov;
+ }
+ const aim=tracking.aimDelta(point,{fov:current,aspect,headroom}),k=Math.PI/180*tracking.aimGain(point),fov=tracking.nextFov(current,{found:true,chosen:target});
+ if(aim.yaw||aim.pitch)Object.assign(view,angles(multiply(orientation(view),multiply(axisQuat([0,1,0],aim.yaw*k),axisQuat([1,0,0],aim.pitch*k)))));
+ if(aim.yaw||aim.pitch||fov!==current){view.Field_Of_View=fov;dirty=true;render();}
+ return {point,zoom,focus,focusing:!!focus};
+}
+function drawOverlay(frame,face,hands,{point,zoom,focus,focusing}={}){
+ const c=overlay.getContext('2d'),w=overlay.width,h=overlay.height;c.drawImage(frame,0,0,w,h);
+ const lines=(pts,connections,color)=>{c.strokeStyle=color;c.lineWidth=2;c.beginPath();for(const {start,end}of connections){c.moveTo(pts[start].x*w,pts[start].y*h);c.lineTo(pts[end].x*w,pts[end].y*h);}c.stroke();};
+ const dot=(p,color,r)=>{c.fillStyle=color;c.beginPath();c.arc(p.x*w,p.y*h,r,0,Math.PI*2);c.fill();};
+ const F=vision.FaceLandmarker;
+ if(face)for(const set of [F.FACE_LANDMARKS_FACE_OVAL,F.FACE_LANDMARKS_LEFT_EYE,F.FACE_LANDMARKS_RIGHT_EYE,F.FACE_LANDMARKS_LIPS])lines(face,set,'#88b9e2cc');
+ for(const hand of hands)lines(hand,vision.HandLandmarker.HAND_CONNECTIONS,'#c2e39e'),hand.forEach(p=>dot(p,'#eff8e9',2.5));
+ if(focus){const b=focus.box;c.strokeStyle='#de9c86';c.lineWidth=2;c.setLineDash([6,4]);c.strokeRect(b.x0*w,b.y0*h,(b.x1-b.x0)*w,(b.y1-b.y0)*h);c.setLineDash([]);}
+ const aimY=focusing?.5:.4;c.strokeStyle='#ffffff88';c.lineWidth=1;c.strokeRect(w/2-7,h*aimY-7,14,14);
+ if(point)dot({x:point[0],y:point[1]},'#de9c86',5);
+ let text=focusing?'Focusing on face and hands':!face?'Looking for your face':hands.length<2?`Show both hands to zoom (${hands.length}/2)`:'Push both hands: zoom out · pull back: zoom in';
+ c.fillStyle='#000a';c.fillRect(0,0,w,24);c.fillRect(0,h-22,w,22);
+ if(zoom?.delta){
+  const [l,r]=zoom.delta,push=l*r>0?Math.sign(l)*Math.min(Math.abs(l),Math.abs(r)):0,cx=w/2,scale=cx/.5;
+  c.fillStyle=zoom.step>0?'#de9c86':zoom.step<0?'#88b9e2':'#93a198';c.fillRect(cx,h-15,Math.max(-cx,Math.min(cx,push*scale)),8);
+  c.fillStyle='#fffa';for(const s of [-1,1])c.fillRect(cx+s*.15*scale-1,h-19,2,16);c.fillRect(cx-1,h-19,2,16);
+  if(zoom.step)text=zoom.step>0?'Zooming out':'Zooming in';
+ }
+ c.font='13px system-ui';c.fillStyle='#eef3ec';c.fillText(text,8,17);
+}
+async function followStep(run){
+ if(run!==followRun)return;const started=performance.now();
+ try{
+  if(connected){
+   const r=await fetch('/api/preview?width=480');if(!r.ok)throw Error('OBS preview unavailable');
+   const frame=await createImageBitmap(await r.blob()),aspect=frame.width/frame.height;
+   lastDetect=Math.max(performance.now(),lastDetect+1);
+   const face=faceModel.detectForVideo(frame,lastDetect).faceLandmarks?.[0],hands=handModel.detectForVideo(frame,lastDetect).landmarks||[];
+   if(run===followRun){
+    let result={point:tracking.facePoint(face)};if(followReady())result=applyFollow(face,hands,aspect);else resetFollow();
+    drawOverlay(frame,face,hands,result);
+   }
+   frame.close();
+  }
+ }catch(e){$('message').textContent='Follow: '+e.message;}
+ if(run===followRun)shell.activeWindow().setTimeout(()=>followStep(run),Math.max(0,125-(performance.now()-started)));
+}
 </script></html>

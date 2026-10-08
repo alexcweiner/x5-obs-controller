@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
-import {createUISync} from '../controller/ui-sync.mjs';
+import {createUISync} from '../lib/ui-sync.mjs';
 function response(){const r=new EventEmitter();r.messages=[];r.writeHead=r.setHeader=()=>{};r.write=s=>r.messages.push(JSON.parse(s.slice(6)));r.end=s=>r.result=JSON.parse(s);return r;}
 test('layout broadcasts across clients, initializes once and resyncs on reconnect',async()=>{
  const handle=createUISync(),a=response(),b=response();

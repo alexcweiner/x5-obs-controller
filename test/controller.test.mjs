@@ -19,7 +19,7 @@ test('glide takes short path across wrap boundary',()=>{
  for(let t=0;t<=1;t+=.1)assert(Math.abs(Math.hypot(...c.slerp(a,b,t))-1)<1e-6);
 });
 test('knob wraps both directions',()=>{assert.equal(c.angularDelta(-179,179),2);assert.equal(c.angularDelta(179,-179),-2);});
-vm.runInContext(script.split('\n').find(l=>l.startsWith('function popoutBounds(')),c);
+vm.runInContext(readFileSync(new URL('../lib/web/remote-shell.js',import.meta.url),'utf8'),c);
 test('popout fits content and preserves position when there is room',()=>{
  const b=c.popoutBounds(90,0,30,{availWidth:1440,availHeight:900},100,150);
  assert.equal(b.height,120);assert.equal(b.x,100);assert.equal(b.y,150);

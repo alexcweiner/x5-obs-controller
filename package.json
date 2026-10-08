@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A compact trackball and saved-angle remote for an Insta360 X5 in OBS",
-  "engines": { "node": ">=22" },
+  "description": "Local OBS remotes: an Insta360 X5 view controller and a browser-based vocal effects studio",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node controller/server.mjs",
+    "vocal": "node vocal/server.mjs",
     "setup": "node scripts/setup.mjs",
     "test": "node --test"
   }

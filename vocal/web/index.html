@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vocal Studio</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0f13;color:#e8f1ef;font:13px ui-rounded,system-ui,-apple-system,sans-serif}
+main{max-width:380px;margin:24px auto;padding:20px;background:#12171c;border:1px solid #1f2a2f;border-radius:18px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.brand{display:grid;gap:2px;margin-right:auto}.kicker{font-size:11px;font-weight:700;letter-spacing:3px;color:#5fe3c0}.brand strong{font-size:20px}
+.dot{width:9px;height:9px;border-radius:50%;background:#55606a}.dot.live{background:#5fe3c0;box-shadow:0 0 10px #5fe3c0aa}
+.statusline{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin-bottom:8px}#route{color:#8a979d;white-space:nowrap}
+.meter{height:7px;border-radius:7px;background:#ffffff14;overflow:hidden;margin-bottom:14px}#level{display:block;height:100%;width:0;background:#5fe3c0;border-radius:7px;transition:width 50ms linear}#level.hot{background:#ff9f5a}
+button{font:inherit;color:#e8f1ef;background:#1b242a;border:1px solid #2b373e;border-radius:9px;padding:7px 12px;cursor:pointer}button:hover{background:#22303a}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #5fe3c0;outline-offset:2px}button:disabled{opacity:.45;cursor:default}
+.segmented{display:grid;grid-template-columns:1fr 1fr;background:#0b0f13;border:1px solid #1f2a2f;border-radius:10px;padding:3px;margin-bottom:10px}.segmented button{border:0;background:none;border-radius:7px;padding:6px}.segmented button[aria-selected=true]{background:#24323a}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.preset{text-align:left;display:grid;gap:4px;padding:9px;min-height:58px;background:#ffffff0a;border:1px solid transparent}.preset strong{font-size:12px}.preset small{font-size:10px;color:#8a979d;line-height:1.3}.preset.active{background:#5fe3c02e;border-color:#5fe3c0b3}
+.field{display:grid;gap:5px;font-size:12px;color:#a9b6bb;margin-bottom:6px}select{font:inherit;color:#e8f1ef;background:#1b242a;border:1px solid #2b373e;border-radius:8px;padding:6px}
+.caption{font-size:11px;color:#7d8b91;margin:6px 0 10px}
+.slider{display:grid;grid-template-columns:92px 1fr 64px;align-items:center;gap:8px;font-size:12px;margin:6px 0}.slider output{text-align:right;font-variant-numeric:tabular-nums;color:#a9b6bb;font-size:11px}input[type=range]{width:100%;accent-color:#5fe3c0}
+.actions{display:flex;gap:8px;margin-top:12px}.actions .primary{background:#5fe3c0;color:#08201a;border-color:#5fe3c0;font-weight:600;min-width:72px}.actions .primary.running{background:#24323a;color:#e8f1ef;border-color:#2b373e}#mute.on{background:#5a2026;border-color:#8a3640}
+#compactToggle{font-size:11px;padding:5px 8px;white-space:nowrap}#float{width:100%;margin-top:12px;background:#24323a}#pipHint{font-size:11px;color:#7d8b91;margin:8px 0 0}
+main.compact #tuning,main.compact .preset small,main.compact #pipHint{display:none}main.compact .preset{min-height:0}
+body.floating main{margin:0;max-width:none;border:0;border-radius:0;padding:14px}body.floating #float,body.floating #pipHint{display:none}
+</style>
+<main>
+ <header><div class="brand"><span class="kicker">VOCAL STUDIO</span><strong>Your voice, polished.</strong></div><span id="dot" class="dot" aria-hidden="true"></span></header>
+ <div class="statusline"><span id="status" role="status">Ready</span><span id="route">OBS waiting</span></div>
+ <div class="meter"><span id="level" role="meter" aria-label="Output level" aria-valuemin="-60" aria-valuemax="0" aria-valuenow="-60"></span></div>
+ <div class="segmented" id="families" role="tablist" aria-label="Presets for"></div>
+ <div class="presets" id="presets"></div>
+ <section id="tuning">
+  <label class="field">Microphone<select id="mic"></select></label>
+  <p class="caption" id="format">Mic → EQ → dynamics → room → limiter → OBS</p>
+  <div id="sliders"></div>
+  <p class="caption">Rumble cut · gentle noise expansion · peak protection</p>
+ </section>
+ <div class="actions"><button id="start" class="primary">Start</button><button id="mute">Mute</button><button id="bypass">Effects on</button></div>
+</main>
+<script src="/shared/remote-shell.js"></script>
+<script type="module" src="/app.mjs"></script>
+</html>

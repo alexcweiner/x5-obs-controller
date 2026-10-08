@@ -1,9 +1,6 @@
-import http from 'node:http';
-import {createUISync} from './ui-sync.mjs';
-const handleUISync=createUISync();
-import {readFile} from 'node:fs/promises';
+import {createLocalServer,readJson,sendJson,sendFile} from '../lib/local-server.mjs';
 import {call} from '../lib/obs.mjs';
-const port=4785, base=`http://127.0.0.1:${port}`;
+const port=4785;
 let target;
 async function findTarget(){
  if(target)return target;
@@ -13,37 +10,32 @@ async function findTarget(){
 }
 const limits={Yaw:[-180,180,0],Pitch:[-180,180,0],Roll:[-180,180,0],Field_Of_View:[10,130,95]};
 async function state(){const t=await findTarget();const f=await call('GetSourceFilter',t);return {...t,enabled:f.filterEnabled,view:Object.fromEntries(Object.entries(limits).map(([k,v])=>[k,f.filterSettings[k]??v[2]]))};}
-const server=http.createServer(async(req,res)=>{
- res.setHeader('Cache-Control','no-store');
- try{
-  if(req.headers.host!==`127.0.0.1:${port}`&&req.headers.host!==`localhost:${port}`){res.writeHead(403);return res.end();}
-  if(req.headers.origin&&!['http://localhost:'+port,base].includes(req.headers.origin)){res.writeHead(403);return res.end();}
-  const path=new URL(req.url,base).pathname;
-  if(await handleUISync(req,res,path))return;
-  if(req.method==='GET'&&path==='/'){res.setHeader('Content-Type','text/html');return res.end(await readFile(new URL('./index.html',import.meta.url)));}
-  if(req.method==='GET'&&path==='/api/state'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(await state()));}
-  if(req.method==='GET'&&path==='/api/health'){
-   const s=await state(),{inputSettings:c}=await call('GetInputSettings',{inputName:s.sourceName});
-   const format=Buffer.from(c.supported_format||'','base64').toString('utf8');
-   let present=false,deviceCheck='Device availability could not be verified';
-   try{const {propertyItems}=await call('GetInputPropertiesListPropertyItems',{inputName:s.sourceName,propertyName:'device'});present=propertyItems.some(p=>p.itemValue===c.device&&p.itemEnabled);deviceCheck=present?'Camera available':'Camera disconnected or unavailable';}catch{}
-   const fps=c.frame_rate?.numerator/c.frame_rate?.denominator;
-   const mode=!c.use_preset&&format.startsWith('2880x1440 ')&&Math.abs(fps-30)<0.1;
-   res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({ok:present&&mode&&s.enabled,details:[deviceCheck,mode?'2880×1440 at 30 FPS configured':'Wrong capture mode: disable Use Preset; select 2880×1440 at 30 FPS',s.enabled?'View filter enabled':'View filter disabled','Source: '+s.sourceName,'Checks device availability and settings, not live frame freshness.']}));
-  }
-  if(req.method==='GET'&&path==='/api/preview'){
-   const t=await findTarget();const {imageData}=await call('GetSourceScreenshot',{sourceName:t.sourceName,imageFormat:'jpg',imageWidth:960,imageCompressionQuality:75});
-   res.setHeader('Content-Type','image/jpeg');return res.end(Buffer.from(imageData.split(',')[1],'base64'));
-  }
-  if(req.method==='POST'&&path==='/api/view'){
-   if(req.headers['content-type']!=='application/json')throw Error('Expected JSON');
-   let body='';for await(const chunk of req){body+=chunk;if(body.length>2048)throw Error('Request too large');}
-   const input=JSON.parse(body),filterSettings={};
-   for(const [k,v]of Object.entries(input)){if(!limits[k]||typeof v!=='number'||!Number.isFinite(v))throw Error('Invalid view setting');filterSettings[k]=k==='Field_Of_View'?Math.max(10,Math.min(130,v)):((v+180)%360+360)%360-180;}
-   await call('SetSourceFilterSettings',{...await findTarget(),filterSettings,overlay:true});
-   res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(await state()));
-  }
-  res.writeHead(404);res.end();
- }catch(e){res.writeHead(503,{'Content-Type':'application/json'});res.end(JSON.stringify({error:e.message}));}
-});
-server.listen(port,'127.0.0.1',()=>console.log(`X5 controller: ${base}`));
+createLocalServer({port,name:'X5 controller',async routes(req,res,path,url){
+ if(req.method==='GET'&&path==='/'){await sendFile(res,new URL('./index.html',import.meta.url));return true;}
+ if(req.method==='GET'&&path==='/tracking.mjs'){await sendFile(res,new URL('./tracking.mjs',import.meta.url));return true;}
+ const asset=/^\/vendor\/mediapipe\/((?:wasm\/)?[\w-]+\.(?:mjs|js|wasm|task))$/.exec(path);
+ if(req.method==='GET'&&asset){await sendFile(res,new URL('./vendor/mediapipe/'+asset[1],import.meta.url),{cache:true});return true;}
+ if(req.method==='GET'&&path==='/api/state'){sendJson(res,await state());return true;}
+ if(req.method==='GET'&&path==='/api/health'){
+  const s=await state(),{inputSettings:c}=await call('GetInputSettings',{inputName:s.sourceName});
+  const format=Buffer.from(c.supported_format||'','base64').toString('utf8');
+  let present=false,deviceCheck='Device availability could not be verified';
+  try{const {propertyItems}=await call('GetInputPropertiesListPropertyItems',{inputName:s.sourceName,propertyName:'device'});present=propertyItems.some(p=>p.itemValue===c.device&&p.itemEnabled);deviceCheck=present?'Camera available':'Camera disconnected or unavailable';}catch{}
+  const fps=c.frame_rate?.numerator/c.frame_rate?.denominator;
+  const mode=!c.use_preset&&format.startsWith('2880x1440 ')&&Math.abs(fps-30)<0.1;
+  sendJson(res,{ok:present&&mode&&s.enabled,details:[deviceCheck,mode?'2880×1440 at 30 FPS configured':'Wrong capture mode: disable Use Preset; select 2880×1440 at 30 FPS',s.enabled?'View filter enabled':'View filter disabled','Source: '+s.sourceName,'Checks device availability and settings, not live frame freshness.']});
+  return true;
+ }
+ if(req.method==='GET'&&path==='/api/preview'){
+  const width=Math.round(Math.max(160,Math.min(1920,Number(url.searchParams.get('width'))||960)));
+  const t=await findTarget();const {imageData}=await call('GetSourceScreenshot',{sourceName:t.sourceName,imageFormat:'jpg',imageWidth:width,imageCompressionQuality:75});
+  res.setHeader('Content-Type','image/jpeg');res.end(Buffer.from(imageData.split(',')[1],'base64'));return true;
+ }
+ if(req.method==='POST'&&path==='/api/view'){
+  const input=await readJson(req),filterSettings={};
+  for(const [k,v]of Object.entries(input)){if(!limits[k]||typeof v!=='number'||!Number.isFinite(v))throw Error('Invalid view setting');filterSettings[k]=k==='Field_Of_View'?Math.max(10,Math.min(130,v)):((v+180)%360+360)%360-180;}
+  await call('SetSourceFilterSettings',{...await findTarget(),filterSettings,overlay:true});
+  sendJson(res,await state());return true;
+ }
+ return false;
+}});
