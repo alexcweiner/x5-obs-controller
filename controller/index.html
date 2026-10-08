@@ -100,18 +100,20 @@ $('home').onclick=()=>{if(connected&&home)recall(home);};
 function drawPresets(){$('presets').replaceChildren();for(let i=0;i<3;i++){const b=document.createElement('button');b.textContent=presets[i]?(presets[i].name||'Angle '+(i+1)):'+ Save '+(i+1);b.title='Click to glide · Hold or right-click to name/save';let timer,long=false,start;const cancel=()=>clearTimeout(timer);b.onpointerdown=e=>{if(e.button!==0)return;long=false;start=[e.clientX,e.clientY];timer=setTimeout(()=>{long=true;editPreset(i);},550);};b.onpointermove=e=>{if(start&&Math.hypot(e.clientX-start[0],e.clientY-start[1])>8)cancel();};b.onpointerup=b.onpointercancel=b.onpointerleave=cancel;b.oncontextmenu=e=>{e.preventDefault();cancel();editPreset(i);};b.onclick=e=>{if(long){long=false;return;}if(e.shiftKey){editPreset(i);return;}if(!connected)return;if(!presets[i]){presets[i]={...view,name:'Angle '+(i+1)};localStorage.setItem('x5-presets',JSON.stringify(presets));drawPresets();}else{const {name,...destination}=presets[i];recall(destination);}};$('presets').append(b);}}drawPresets();
 async function tick(){try{if(!connected){const d=await api('state');view=d.view;home??={...view};connected=true;dirty=false;$('message').textContent=d.enabled?'':'The X5 filter is disabled in OBS. Enable it to see view changes.';$('status').textContent='● OBS connected';render();}advanceGlide();if(dirty&&!sending){dirty=false;sending=true;await api('view',view);sending=false;}}catch(e){sending=false;error(e);}shell.activeWindow().setTimeout(tick,connected?60:2000);}tick();
 shell.setCompact(shell.compact);
-// Follow: face detection on the filtered shot steers the view; two-hand push/pull zooms.
+// Follow: head tracking on the filtered shot steers the view; two-hand push/pull zooms.
 const followButton=document.createElement('button');followButton.id='followToggle';followButton.title='Keep my face in frame · push both hands toward the camera to zoom out, pull them back to zoom in · open palms beside your face to focus on face and hands';followButton.setAttribute('aria-pressed','false');shell.compactToggle.before(followButton);
 const overlay=document.createElement('canvas');overlay.id='followView';overlay.width=480;overlay.height=240;overlay.hidden=true;overlay.setAttribute('aria-label','Follow tracking view: face, hands, and push/pull zoom meter');remote.querySelector('header').after(overlay);
-let vision,faceModel,handModel,tracking,followRun=0,reachBaseline=null,lastDetect=0,chosenFov=null,lostSince=null,savedFov=null,focusSeen=0;
+let vision,poseModel,faceModel,handModel,tracking,followRun=0,reachBaseline=null,lastDetect=0,chosenFov=null,lostSince=null,savedFov=null,focusSeen=0;
 function setFollowLabel(text){followButton.textContent='◎ '+text;}setFollowLabel('Follow');
 async function loadModels(){
- tracking??=await import('/tracking.mjs');if(faceModel&&handModel)return;
+ tracking??=await import('/tracking.mjs');if(poseModel&&faceModel&&handModel)return;
  vision??=await import('/vendor/mediapipe/vision_bundle.mjs');
  const files=await vision.FilesetResolver.forVisionTasks('/vendor/mediapipe/wasm');
  const create=async(Task,model,extra)=>{const options=delegate=>({baseOptions:{modelAssetPath:'/vendor/mediapipe/'+model,delegate},runningMode:'VIDEO',...extra});try{return await Task.createFromOptions(files,options('GPU'));}catch{return Task.createFromOptions(files,options('CPU'));}};
- // Low gates so a face with the forehead hidden (a hat) is still accepted.
- faceModel??=await create(vision.FaceLandmarker,'face_landmarker.task',{numFaces:1,minFaceDetectionConfidence:.35,minFacePresenceConfidence:.35,minTrackingConfidence:.35});
+ // Pose only locates the head; it finds small, turned, and partly hidden heads the face model misses.
+ poseModel??=await create(vision.PoseLandmarker,'pose_landmarker_lite.task',{numPoses:1,minPoseDetectionConfidence:.3,minPosePresenceConfidence:.3,minTrackingConfidence:.3});
+ // Low gates so a face with the forehead hidden (a hat) is still accepted. IMAGE mode: each crop moves.
+ faceModel??=await create(vision.FaceLandmarker,'face_landmarker.task',{runningMode:'IMAGE',numFaces:1,minFaceDetectionConfidence:.35,minFacePresenceConfidence:.35,minTrackingConfidence:.35});
  handModel??=await create(vision.HandLandmarker,'hand_landmarker.task',{numHands:2});
 }
 function resetFollow(){reachBaseline=null;chosenFov=null;lostSince=null;savedFov=null;focusSeen=0;}
@@ -126,9 +128,9 @@ followButton.onclick=async()=>{
 };
 const followReady=()=>connected&&view&&!glide&&performance.now()>=followPausedUntil;
 // Palms beside the face frames face and hands; otherwise aim at the face and let a two-hand push/pull zoom.
-function applyFollow(face,hands,aspect){
+function applyFollow(head,hands,aspect){
  const now=performance.now(),current=view.Field_Of_View;chosenFov??=current;
- const facePoint=tracking.facePoint(face);
+ const facePoint=head?.point;
  if(!facePoint){
   endFocus();lostSince??=now;reachBaseline=null;
   const fov=tracking.nextFov(current,{found:false,chosen:chosenFov,lostFor:now-lostSince});
@@ -136,13 +138,13 @@ function applyFollow(face,hands,aspect){
   return {};
  }
  lostSince=null;
- const focus=tracking.focusFrame(face,hands,{aspect,fov:current});
+ const focus=tracking.focusFrame(head,hands,{aspect,fov:current});
  let zoom=null,point=facePoint,target,headroom=.4;
  if(focus){focusSeen=now;savedFov??=chosenFov;reachBaseline=null;point=focus.point;target=focus.fov;headroom=.5;setFollowLabel('Focusing');}
  else if(savedFov!==null&&now-focusSeen<400)return {point:facePoint,focusing:true};
  else{
   endFocus();setFollowLabel('Following');
-  zoom=tracking.zoomFromReach(reachBaseline,tracking.handReach(hands,face,{aspect}));reachBaseline=zoom.baseline;
+  zoom=tracking.zoomFromReach(reachBaseline,tracking.handReach(hands,head,{aspect}));reachBaseline=zoom.baseline;
   chosenFov=Math.min(130,Math.max(10,chosenFov+zoom.step));target=chosenFov;
  }
  const aim=tracking.aimDelta(point,{fov:current,aspect,headroom}),k=Math.PI/180*tracking.aimGain(point),fov=tracking.nextFov(current,{found:true,chosen:target});
@@ -150,17 +152,18 @@ function applyFollow(face,hands,aspect){
  if(aim.yaw||aim.pitch||fov!==current){view.Field_Of_View=fov;dirty=true;render();}
  return {point,zoom,focus,focusing:!!focus};
 }
-function drawOverlay(frame,face,hands,{point,zoom,focus,focusing}={}){
+function drawOverlay(frame,face,pose,hands,{point,zoom,focus,focusing}={}){
  const c=overlay.getContext('2d'),w=overlay.width,h=overlay.height;c.drawImage(frame,0,0,w,h);
  const lines=(pts,connections,color)=>{c.strokeStyle=color;c.lineWidth=2;c.beginPath();for(const {start,end}of connections){c.moveTo(pts[start].x*w,pts[start].y*h);c.lineTo(pts[end].x*w,pts[end].y*h);}c.stroke();};
  const dot=(p,color,r)=>{c.fillStyle=color;c.beginPath();c.arc(p.x*w,p.y*h,r,0,Math.PI*2);c.fill();};
  const F=vision.FaceLandmarker;
  if(face)for(const set of [F.FACE_LANDMARKS_FACE_OVAL,F.FACE_LANDMARKS_LEFT_EYE,F.FACE_LANDMARKS_RIGHT_EYE,F.FACE_LANDMARKS_LIPS])lines(face,set,'#88b9e2cc');
+ else if(pose)pose.slice(0,11).forEach(p=>dot(p,'#88b9e2',3));
  for(const hand of hands)lines(hand,vision.HandLandmarker.HAND_CONNECTIONS,'#c2e39e'),hand.forEach(p=>dot(p,'#eff8e9',2.5));
  if(focus){const b=focus.box;c.strokeStyle='#de9c86';c.lineWidth=2;c.setLineDash([6,4]);c.strokeRect(b.x0*w,b.y0*h,(b.x1-b.x0)*w,(b.y1-b.y0)*h);c.setLineDash([]);}
  const aimY=focusing?.5:.4;c.strokeStyle='#ffffff88';c.lineWidth=1;c.strokeRect(w/2-7,h*aimY-7,14,14);
  if(point)dot({x:point[0],y:point[1]},'#de9c86',5);
- let text=focusing?'Focusing on face and hands':!face?'Looking for your face':hands.length<2?`Show both hands to zoom (${hands.length}/2)`:'Push both hands: zoom out · pull back: zoom in';
+ let text=focusing?'Focusing on face and hands':!point?'Looking for your face':hands.length<2?`Show both hands to zoom (${hands.length}/2)`:'Push both hands: zoom out · pull back: zoom in';
  c.fillStyle='#000a';c.fillRect(0,0,w,24);c.fillRect(0,h-22,w,22);
  if(zoom?.delta){
   const [l,r]=zoom.delta,push=l*r>0?Math.sign(l)*Math.min(Math.abs(l),Math.abs(r)):0,cx=w/2,scale=cx/.5;
@@ -170,6 +173,14 @@ function drawOverlay(frame,face,hands,{point,zoom,focus,focusing}={}){
  }
  c.font='13px system-ui';c.fillStyle='#eef3ec';c.fillText(text,8,17);
 }
+// Face landmarks from a crop around the pose head, back in frame coordinates; whole frame without a pose.
+function findFace(frame,pose){
+ const size={width:frame.width,height:frame.height},crop=tracking.headCrop(pose,size);
+ if(!crop)return faceModel.detect(frame).faceLandmarks?.[0];
+ const canvas=new OffscreenCanvas(256,256);canvas.getContext('2d').drawImage(frame,crop.x,crop.y,crop.size,crop.size,0,0,256,256);
+ const image=canvas.transferToImageBitmap(),face=faceModel.detect(image).faceLandmarks?.[0];image.close();
+ return face&&tracking.fromCrop(face,crop,size);
+}
 async function followStep(run){
  if(run!==followRun)return;const started=performance.now();
  try{
@@ -177,10 +188,11 @@ async function followStep(run){
    const r=await fetch('/api/preview?width=480');if(!r.ok)throw Error('OBS preview unavailable');
    const frame=await createImageBitmap(await r.blob()),aspect=frame.width/frame.height;
    lastDetect=Math.max(performance.now(),lastDetect+1);
-   const face=faceModel.detectForVideo(frame,lastDetect).faceLandmarks?.[0],hands=handModel.detectForVideo(frame,lastDetect).landmarks||[];
+   const pose=poseModel.detectForVideo(frame,lastDetect).landmarks?.[0],hands=handModel.detectForVideo(frame,lastDetect).landmarks||[];
+   const face=findFace(frame,pose),head=(face&&tracking.headFromFace(face,aspect))||tracking.headFromPose(pose,aspect);
    if(run===followRun){
-    let result={point:tracking.facePoint(face)};if(followReady())result=applyFollow(face,hands,aspect);else resetFollow();
-    drawOverlay(frame,face,hands,result);
+    let result={point:head?.point};if(followReady())result=applyFollow(head,hands,aspect);else resetFollow();
+    drawOverlay(frame,face,pose,hands,result);
    }
    frame.close();
   }
