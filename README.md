@@ -1,6 +1,6 @@
 # X5 View Remote
 
-A tiny local remote that turns an Insta360 X5's stitched 360° webcam feed into a steerable camera view in OBS. Drag the trackball, adjust zoom, or glide between three named shots. Collapse it to saved spots and float it above your other windows.
+A tiny local remote that turns an Insta360 X5's stitched 360° webcam feed into a steerable camera view in OBS. Drag the trackball, adjust zoom, or glide between three named shots. The controls sit on the faces of a cube you turn with chevrons, and the remote can float above your other windows.
 
 <p align="center">
   <img src="docs/controller.jpg" width="320" alt="X5 View Remote with a draggable trackball, arrow controls, zoom and horizon knobs, saved spots, and glide speed and easing controls">
@@ -71,6 +71,17 @@ The remote discovers the filter by this filename. Use one matching source/filter
 
 ## Controls
 
+The remote is a cube with one group of controls per face. Its four edges are outward-pointing chevrons: click an edge (or focus it and press Enter) to turn the cube that way, a face at a time; each face turns upright as it arrives. The current face's name is in the top-left corner. Hover the top-right corner for **▦ All**, which lays every face out flat so all controls show at once; **◆ Cube** goes back. The choice is remembered in the browser. The edge color is the connection status: grey while connecting, green when OBS and the camera checks pass, red when something needs attention.
+
+| Face | Contents |
+| --- | --- |
+| Aim | Trackball with aim and roll buttons |
+| Saved spots | Three saved spots, glide speed, and easing |
+| Zoom & horizon | Zoom and horizon knobs, on a diagonal |
+| Follow | Follow button, tracking state, and messages |
+| Preview | Live filtered shot, with the tracking overlay while Follow is on |
+| More | Reset view, movement speed, pan/tilt readout, status details, and Float |
+
 | Control | Action |
 | --- | --- |
 | Globe drag | Rotate relative to the current camera view |
@@ -83,32 +94,33 @@ The remote discovers the filter by this filename. Use one matching source/filter
 | Empty saved spot | Save current framing |
 | Saved spot click | Glide to that framing |
 | Hold a spot / right-click / Shift-click | Rename or replace with current view |
-| Saved spots only / Expand | Collapse or restore controls |
+| Cube edges | Turn to the next face up, down, left, or right |
+| ▦ All / ◆ Cube (top-right corner) | Show every control at once, or go back to the cube |
 
-Glide duration: Cut, ½s, 1½s, 3s, or 5s. Easing: Linear, Smooth in/out, or Ease out. Rotation follows shortest-path quaternion interpolation, with zoom interpolated alongside it. Manual movement interrupts a glide. Glide/ease settings are hidden in compact mode but still apply.
+Glide duration: Cut, ½s, 1½s, 3s, or 5s. Easing: Linear, Smooth in/out, or Ease out. Rotation follows shortest-path quaternion interpolation, with zoom interpolated alongside it. Manual movement interrupts a glide.
 
 Presets and preferences live in browser localStorage, not OBS or Git. Different browsers/profiles have different spots. Clearing site data deletes them. Keep one active remote to avoid competing updates.
 
 ## Follow and hand zoom
 
-Click **◎ Follow** in the header to keep yourself in frame. About eight times a second the remote grabs a small screenshot of the filtered X5 shot from OBS, finds your face with MediaPipe Face Landmarker, and nudges yaw and pitch to keep you centered with a little headroom. Only the face is needed, so sitting at a desk with your body cropped works. Follow aims between your eyes, nudged slightly toward the nose. The detection thresholds are set low enough that a hat covering your forehead still counts as a face. It turns faster when you are near the edge of the shot. Horizon roll is left as you set it. A small dead zone keeps the camera from hunting.
+Click **◎ Follow** on the Follow face to keep yourself in frame. About eight times a second the remote grabs a small screenshot of the filtered X5 shot from OBS, finds your face, and nudges yaw and pitch to keep you centered with a little headroom. Only your head is needed, so sitting at a desk with your body cropped works. Follow aims between your eyes, nudged slightly toward the nose. MediaPipe Pose Landmarker (lite) first locates your head, which works when you are small in the shot, turned at an angle, or wearing a hat. MediaPipe Face Landmarker then reads a close crop around your head. On its own the face model misses faces that are small or turned, and the crop fixes that. If the face model still misses, Follow uses the pose model's nose, eye, and ear points. The face thresholds are set low enough that a hat covering your forehead still counts. It turns faster when you are near the edge of the shot. Horizon roll is left as you set it. A small dead zone keeps the camera from hunting.
 
-While Follow is on, a tracking view appears under the header. It shows what the model sees: your face outline, eyes, and lips in blue, each detected hand in green, your tracked point in orange, and a box marking where Follow aims. The bar along the bottom is the push/pull meter. The white ticks are the thresholds; it turns orange when zooming out and blue when zooming in. The tracking view only appears in the remote, never in OBS.
+While Follow is on, the Preview face shows a tracking view, and the Follow face shows the tracking state and hints. It shows what the model sees: your face outline, eyes, and lips in blue (or blue dots for nose, eyes, and ears when only the pose model has you), each detected hand in green, your tracked point in orange, and a box marking where Follow aims. The bar along the bottom is the push/pull meter. The white ticks are the thresholds; it turns orange when zooming out and blue when zooming in. The tracking view only appears in the remote, never in OBS.
 
 Zoom with both hands, palms facing the camera:
 
 - Push both hands toward the camera to zoom out.
 - Pull both hands back toward your chest to zoom in.
 
-MediaPipe Hand Landmarker measures how big each palm looks, compared with the distance between your eyes. Your eyes shrink and grow with the zoom exactly like your palms do, so zooming never reads as a push. Pushing makes both palms look bigger. One hand, or hands moving in opposite directions, does nothing. Holding a pose stops zooming after a moment, so push again to keep going. Zoom waits while your face is not found. The tracking view shows "Show both hands" until both are detected.
+MediaPipe Hand Landmarker measures how big each palm looks, compared with the distance from your eyes to your mouth. That distance shrinks and grows with the zoom exactly like your palms do, so zooming never reads as a push, and it barely changes when you turn your head. Pushing makes both palms look bigger. One hand, or hands moving in opposite directions, does nothing. Holding a pose stops zooming after a moment, so push again to keep going. Zoom waits while your face is not found. The tracking view shows "Show both hands" until both are detected.
 
 To focus on your face and hands, hold both hands up beside your face, palms open toward the camera and fingers up, one hand on each side. Follow frames your face and both hands together, centered, so they fill about 80% of the shot. A dashed orange box in the tracking view shows the framing, and the button reads **Focusing**. The hands must be around face height, open (a fist does not count), and turned toward the camera (an edge-on hand does not count). Push/pull zoom pauses while you hold the pose. Drop either hand and Follow eases back to the zoom you had before and goes back to following your face.
 
-If you leave the shot, for example by standing up in a tight frame, Follow waits briefly and then widens to about 100° (**Searching…**) to find you. Once it has you again, it eases back to your zoom. If you are still not found at full width, it shows **Holding**. Follow only sees the current shot and does not search the rest of the 360° sphere. Manual aiming, zoom, and saved-spot glides pause Follow for two seconds. The models, wasm runtime, and JavaScript bundle (Apache-2.0, `@mediapipe/tasks-vision` 1.1.0) are vendored in `controller/vendor/mediapipe/` and served locally; nothing is sent to Google or any other service. The first click takes a few seconds to load about 24 MB of model files.
+If you leave the shot, for example by standing up in a tight frame, Follow waits briefly and then widens to about 100° (**Searching…**) to find you. Once it has you again, it eases back to your zoom. If you are still not found at full width, it shows **Holding**. Follow only sees the current shot and does not search the rest of the 360° sphere. Manual aiming, zoom, and saved-spot glides pause Follow for two seconds. The models, wasm runtime, and JavaScript bundle (Apache-2.0, `@mediapipe/tasks-vision` 1.1.0) are vendored in `controller/vendor/mediapipe/` and served locally; nothing is sent to Google or any other service. The first click takes a few seconds to load about 30 MB of model files.
 
-Click **Float above other windows** to open PiP, then collapse it for a small shot-switcher. Keep the originating tab open. Browser/OS minimum window sizes may limit how small it can become. Keyboard shortcuts require focus in the remote; they are not global OBS hotkeys.
+Click **Float above other windows** on the More face to open the cube in PiP. Keep the originating tab open. Browser/OS minimum window sizes may limit how small it can become. Keyboard shortcuts require focus in the remote; they are not global OBS hotkeys.
 
-The **X5** label is green when device availability, configured capture mode, and enabled filter checks pass; red means attention is needed. Click it for details. It polls every three seconds. It does not verify frame freshness, image quality, or successful shader compilation.
+The cube edges are green when device availability, configured capture mode, and enabled filter checks pass; red means attention is needed. The More face lists the details. It polls every three seconds. It does not verify frame freshness, image quality, or successful shader compilation.
 
 ## Architecture and security
 
@@ -151,8 +163,8 @@ lib/ws.mjs                  Minimal WebSocket endpoint for browser audio (shared
 lib/web/remote-shell.js     Popout, compact toggle and layout sync for both remotes (shared)
 controller/index.html       X5 UI, trackball, presets, glides
 controller/server.mjs       X5 API on 127.0.0.1:4785
-controller/tracking.mjs     Follow face aim, two-hand zoom, and palms-beside-face framing math
-controller/vendor/mediapipe Face and Hand Landmarker models, wasm runtime, bundle
+controller/tracking.mjs     Follow head crop, face aim, two-hand zoom, and palms-beside-face framing math
+controller/vendor/mediapipe Pose, Face, and Hand Landmarker models, wasm runtime, bundle
 vocal/web/                  Vocal Studio page, styles, presets and audio worklets
 vocal/server.mjs            Vocal Studio server on 127.0.0.1:4791 and the OBS WAV stream
 vocal/setup-obs.mjs         Creates the OBS media source and mutes the duplicate raw mic
@@ -160,7 +172,7 @@ shaders/insta360-x5-flat-view.shader
 scripts/setup.mjs           Dry-run / apply setup
 ```
 
-Each app keeps its own CSS; behavior shared by both lives in `lib/`. Run `npm test`. Tests cover quaternion/Euler round trips including poles, shortest-path glide wrap, knob wrap, JavaScript syntax, Follow aim direction and dead zone, face aim from the eyes and nose, two-hand zoom (both hands and a face required, unaffected by the current zoom, held pose settles), palms-beside-face framing (open palms on both sides at face height; fists, one side, or hands at the desk ignored; return to the earlier zoom), widening to search when you are lost, vocal presets and chain mapping, mic-name matching between Chrome and OBS, and WebSocket framing through the shared server. Live OBS setup, disconnect/reconnect, PiP sizing, and visual output still need integration checks on the target machine.
+Each app keeps its own CSS; behavior shared by both lives in `lib/`. Run `npm test`. Tests cover quaternion/Euler round trips including poles, shortest-path glide wrap, knob wrap, JavaScript syntax, Follow aim direction and dead zone, face aim from the eyes and nose, the pose fallback and head crop (scale holds when the head turns), two-hand zoom (both hands and a head required, unaffected by the current zoom, held pose settles), palms-beside-face framing (open palms on both sides at face height; fists, one side, or hands at the desk ignored; return to the earlier zoom), widening to search when you are lost, vocal presets and chain mapping, mic-name matching between Chrome and OBS, and WebSocket framing through the shared server. Live OBS setup, disconnect/reconnect, PiP sizing, and visual output still need integration checks on the target machine.
 
 ## Credits
 
