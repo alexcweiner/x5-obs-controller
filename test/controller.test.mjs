@@ -6,7 +6,8 @@ const html=readFileSync(new URL('../controller/index.html',import.meta.url),'utf
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 test('frontend JavaScript parses',()=>{new vm.Script(script);});
 const c=vm.createContext({});
-for(const name of ['multiply','axisQuat','orientation','matrix','angles','slerp','angularDelta','uprightRoll'])vm.runInContext(script.split('\n').find(l=>l.startsWith('function '+name+'(')),c);
+for(const name of ['multiply','axisQuat','orientation','matrix','angles','slerp','angularDelta','uprightRoll','levelAim'])vm.runInContext(script.split('\n').find(l=>l.startsWith('function '+name+'(')),c);
+vm.runInContext(script.match(/^function snapCube\([\s\S]*?\n\}$/m)[0],c);
 test('quaternion orientation survives Euler transport, including poles',()=>{
  for(const pitch of [-180,-90,-89,0,89,90,179])for(const yaw of [-179,0,72,179]){
   const q=c.orientation({Yaw:yaw,Pitch:pitch,Roll:123});const a=c.matrix(q),b=c.matrix(c.orientation(c.angles(q)));
@@ -27,6 +28,25 @@ test('cube turns land the front face upright',()=>{
  r=c.uprightRoll(turn(top,Y,-1));assert.equal(r.face,1);assert(near(r.roll,-quarter));
  r=c.uprightRoll(turn(start,Y,1));assert.equal(r.face,3);assert(near(r.roll,0));
  let q=start;for(const [axis,sign]of [[X,1],[Y,-1],[X,-1],[Y,1],[X,1],[X,1],[Y,1]]){q=turn(q,axis,sign);const u=c.uprightRoll(q);q=c.multiply(c.axisQuat([0,0,1],u.roll),q);assert(near(c.uprightRoll(q).roll,0));}
+});
+test('a dragged cube snaps to the face most toward you, upright',()=>{
+ const quarter=Math.PI/2,X=[1,0,0],Y=[0,1,0],same=(a,b)=>Math.abs(Math.abs(a.reduce((s,v,i)=>s+v*b[i],0))-1)<1e-9;
+ let r=c.snapCube(c.multiply(c.axisQuat([.6,.8,0],.5),[0,0,0,1]));assert.equal(r.face,0);assert(same(r.to,[0,0,0,1]));
+ const past=c.multiply(c.axisQuat(X,quarter*.7),[0,0,0,1]);r=c.snapCube(past);assert.equal(r.face,4);assert(same(r.to,c.axisQuat(X,quarter)));
+ for(let i=0;i<40;i++){
+  const q=c.multiply(c.axisQuat([Math.sin(i),Math.cos(i*1.3),Math.sin(i*.7)].map((v,_,a)=>v/Math.hypot(...a)),i*.37),[0,0,0,1]);r=c.snapCube(q);
+  assert.equal(r.face,c.uprightRoll(q).face);assert.equal(c.uprightRoll(r.to).face,r.face);assert(Math.abs(c.uprightRoll(r.to).roll)<1e-9);
+  const m=c.matrix(r.to);assert(m.every(v=>Math.abs(v)<1e-9||Math.abs(Math.abs(v)-1)<1e-9),'lands square');
+ }
+});
+test('follow aim keeps the horizon while pointing where local turns point',()=>{
+ const forward=v=>{const m=c.matrix(c.orientation(v));return [m[2],m[5],m[8]];};
+ let v={Yaw:30,Pitch:20,Roll:10};
+ for(let i=0;i<200;i++){
+  const yaw=Math.sin(i*1.7)*.05,pitch=Math.cos(i*1.3)*.04,raw=c.angles(c.multiply(c.orientation(v),c.multiply(c.axisQuat([0,1,0],yaw),c.axisQuat([1,0,0],pitch)))),next=c.levelAim(v,yaw,pitch);
+  forward(next).forEach((x,j)=>assert(Math.abs(x-forward(raw)[j])<1e-9));
+  assert(Math.abs(next.Roll-10)<1e-9);v=next;
+ }
 });
 test('knob wraps both directions',()=>{assert.equal(c.angularDelta(-179,179),2);assert.equal(c.angularDelta(179,-179),-2);});
 vm.runInContext(readFileSync(new URL('../lib/web/remote-shell.js',import.meta.url),'utf8'),c);

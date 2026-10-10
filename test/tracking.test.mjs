@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {headCrop,fromCrop,headFromFace,headFromPose,aimDelta,aimGain,palmSize,openPalm,handReach,zoomFromReach,focusFrame,nextFov} from '../controller/tracking.mjs';
+import {headCrop,fromCrop,headFromFace,headFromPose,aimDelta,aimGain,palmSize,openPalm,handReach,zoomFromReach,focusFrame,nextFov,toGray,grayPatch,patchContrast,findTemplate,rollToLevel} from '../controller/tracking.mjs';
 const frame={fov:60,aspect:2};
 const face=(cx,cy,size,over={})=>{
  const lm=Array.from({length:478},()=>({x:cx,y:cy,z:0}));
@@ -61,14 +61,38 @@ test('head crop is a square around the head that maps back to the frame',()=>{
  assert(close(p.x,(crop.x+crop.size/2)/960)&&close(p.y,(crop.y+crop.size/2)/480));
  assert.equal(headCrop(undefined,size),null);
 });
+test('head tilt reads a clockwise-turned or upside-down head, and roll turns it back upright',()=>{
+ const turned=(points,deg)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return points.map(p=>{const x=(p.x-.5)*frame.aspect,y=p.y-.4;return {...p,x:.5+(x*c-y*s)/frame.aspect,y:.4+x*s+y*c};});};
+ assert(close(head(.5,.4,.2).tilt,0));
+ assert(close(headFromFace(turned(face(.5,.4,.2),30),2).tilt,30,1e-6));
+ assert(close(Math.abs(headFromFace(turned(face(.5,.4,.2),180),2).tilt),180,1e-6));
+ assert(close(headFromPose(turned(pose(.5,.4,.2),-50),2).tilt,-50,1e-6));
+ assert.equal(rollToLevel(5),0,'a slightly cocked head is left alone');
+ assert(rollToLevel(30)>0&&rollToLevel(-30)<0,'positive roll turns the picture counterclockwise, against a clockwise tilt');
+ assert.equal(rollToLevel(180),8,'upside down turns over in capped steps');
+ assert.equal(rollToLevel(null),0);
+});
 test('palm size grows with the hand',()=>{assert(palmSize(hand(.3,.1),2)>palmSize(hand(.3,.05),2));});
-test('hand reach needs two hands and a head, and is invariant to zoom',()=>{
+test('hand reach needs two hands, and with a head is invariant to zoom',()=>{
  assert.equal(handReach([hand(.3,.1)],head(.5,.4,.2),frame),null);
- assert.equal(handReach([hand(.7,.1),hand(.3,.1)],null,frame),null);
+ assert.equal(handReach([hand(.7,.1),hand(.3,.1)],null,{aspect:2}),null,'no head and no field of view');
  const near=handReach([hand(.7,.1),hand(.3,.1)],head(.5,.4,.2),frame);
  const zoomed=handReach([hand(.7,.2),hand(.3,.2)],head(.5,.4,.4),frame);
  near.values.forEach((v,i)=>assert(close(v,zoomed.values[i])));
  assert.equal(handReach([hand(.7,.1),hand(.3,.1)],headFromPose(pose(.5,.4,.2),2),frame).kind,'pose','switching source resets the baseline');
+});
+test('without a head, hand reach uses the field of view and still ignores zoom',()=>{
+ const t=d=>Math.tan(d*Math.PI/360),wide=handReach([hand(.7,.1),hand(.3,.1)],null,{...frame,fov:60}),close60=.1*t(60)/t(40);
+ const tight=handReach([hand(.7,close60),hand(.3,close60)],null,{...frame,fov:40});
+ assert.equal(wide.kind,'view');wide.values.forEach((v,i)=>assert(close(v,tight.values[i])));
+});
+test('template matching finds a picked patch after it moves, and rejects flat patches',()=>{
+ const width=120,height=60,image=(dx,dy)=>{const g=new Float32Array(width*height);for(let y=0;y<height;y++)for(let x=0;x<width;x++){const u=x-dx,v=y-dy;g[y*width+x]=40+60*Math.sin(u*.21)*Math.cos(v*.17)+((u-50)**2+(v-30)**2<64?120:0);}return g;};
+ const template=grayPatch(image(0,0),width,height,[50,30],16);
+ const m=findTemplate(image(9,-5),width,height,template,16,[50,30],20);
+ assert(Math.abs(m.x-59)<=1&&Math.abs(m.y-25)<=1&&m.score>.9,JSON.stringify(m));
+ assert(patchContrast(template)>8);assert.equal(patchContrast(new Float32Array(256).fill(90)),0);
+ assert.equal(toGray({data:new Uint8ClampedArray([255,255,255,255]),width:1,height:1})[0].toFixed(0),'255');
 });
 const reach=(l,r,kind='face')=>({kind,values:[l,r]});
 test('two-hand push zooms out, pull zooms in',()=>{

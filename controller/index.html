@@ -10,18 +10,21 @@ body{font-size:12px}main{max-width:320px;padding:12px;margin:0 auto}header{margi
 body.floating{overflow:auto}dialog{max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box}
 /* Cube remote: one group of controls per face; the face borders are the OBS connection status. */
 main{max-width:440px;--edge:#93a198}main[data-link=good]{--edge:#b9df94}main[data-link=bad]{--edge:#fa9b8f}main>header{display:none}.face-name{position:absolute;z-index:3;top:9px;left:14px;color:#93a198;font-size:11px;letter-spacing:.5px;text-transform:uppercase;pointer-events:none}
-.stage{--size:320px;display:grid;place-content:center;margin:4px 0 10px;padding:16px}.scene{position:relative;width:var(--size);height:var(--size);perspective:1200px}.cube{position:relative;width:100%;height:100%;transform-style:preserve-3d}
-.face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:18px;background:#1a201e;border:4px solid var(--edge);border-radius:6px;box-shadow:inset 0 0 22px color-mix(in srgb,var(--edge) 22%,transparent);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;transition:border-color .4s,box-shadow .4s}.face[inert]{pointer-events:none}
-.face[data-face="0"]{align-items:center}.face[data-face="5"]{justify-content:flex-start;gap:5px;padding-block:22px}
-.edges{position:absolute;z-index:2;top:-16px;left:-16px;width:calc(100% + 32px);height:calc(100% + 32px);overflow:visible;pointer-events:none;transition:opacity .2s}.scene.turning .edges{opacity:0}
-.edge{cursor:pointer;outline:none}.edge-hit{fill:none;stroke:transparent;stroke-width:26;stroke-linecap:round;pointer-events:stroke}.edge-line{fill:none;stroke:var(--edge);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;transition:stroke-width .15s,stroke .4s}.edge:hover .edge-line,.edge:focus-visible .edge-line{stroke-width:7;filter:drop-shadow(0 0 6px var(--edge))}
-main:not(.all) .scene:not(.turning) .face{border-color:transparent}
+.stage{--size:320px;display:grid;place-content:center;margin:4px 0 10px;padding:26px}.scene{position:relative;width:var(--size);height:var(--size);perspective:1200px}.cube{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+.face{position:absolute;inset:14px;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px;text-shadow:0 1px 3px #000c;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}.face[inert]{pointer-events:none}
+.face :is(button,select,.knob,#trackball,.preview){border:1px solid color-mix(in srgb,var(--edge) 22%,#3a463d);box-shadow:0 6px 16px #000a;transition:border-color .2s,box-shadow .2s,background .2s}
+.face :is(button,select,.knob,#trackball,.preview):hover{border-color:color-mix(in srgb,var(--edge) 70%,transparent);box-shadow:0 6px 16px #000a,0 0 0 1px color-mix(in srgb,var(--edge) 40%,transparent),0 0 18px color-mix(in srgb,var(--edge) 50%,transparent)}
+.face .knob{border-width:2px}
+.facet{position:absolute;left:50%;top:50%;transform-origin:0 0;background:color-mix(in srgb,var(--edge) 7%,var(--shade));backface-visibility:hidden;-webkit-backface-visibility:hidden;pointer-events:none}.facet svg{display:block;overflow:visible}.facet line,.facet polyline{fill:none;stroke:var(--edge);stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}.facet line{stroke-width:5}.facet polyline{stroke-width:1.5;stroke-opacity:.1}
+.face[data-face="0"]{align-items:center}
+.edges{position:absolute;z-index:2;top:-16px;left:-16px;width:calc(100% + 32px);height:calc(100% + 32px);overflow:visible;pointer-events:none;transition:opacity .2s}.scene.turning .edges,.scene.turning .face-name{opacity:0}.face-name{transition:opacity .2s}
+.edge{cursor:pointer;outline:none;touch-action:none}.scene.dragging .edge{cursor:grabbing}.edge-hit{fill:none;stroke:transparent;stroke-width:26;stroke-linecap:round;pointer-events:stroke}.edge-line{fill:none;stroke:var(--edge);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0;transition:stroke-width .15s,stroke-opacity .15s,stroke .4s}.edge:hover .edge-line,.edge:focus-visible .edge-line{stroke-width:6;stroke-opacity:1;filter:drop-shadow(0 0 6px var(--edge))}
 .view-corner{position:absolute;z-index:3;top:0;right:0;width:72px;height:44px;display:flex;align-items:flex-start;justify-content:flex-end;padding:6px 8px}#viewToggle{font-size:10px;white-space:nowrap;padding:4px 7px;opacity:0;transition:opacity .2s}.view-corner:hover #viewToggle,#viewToggle:focus-visible{opacity:1}
 main:not(.all) .face[data-face="0"] small{display:none}main.all .scene{padding-top:32px}main.all .face-name{top:6px;left:2px}main.all .view-corner{padding:0}main.all #viewToggle{opacity:1}
-main.all{max-width:1000px}main.all .scene{width:auto;height:auto;perspective:none}main.all .cube{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;transform-style:flat}main.all .face{position:relative;transform:none!important;backface-visibility:visible;-webkit-backface-visibility:visible;padding:14px;justify-content:flex-start}main.all .face:before{content:attr(aria-label);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#93a198;align-self:stretch}main.all .face[data-face="2"]{min-height:300px}main.all .edges{display:none}main.all .stage{padding:0}
+main.all{max-width:1000px}main.all .scene{width:auto;height:auto;perspective:none}main.all .cube{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;transform-style:flat}main.all .face{position:relative;inset:auto;transform:none!important;backface-visibility:visible;-webkit-backface-visibility:visible;padding:14px;justify-content:flex-start;clip-path:none;background:#1a201e;border:4px solid var(--edge);border-radius:6px}main.all .facet{display:none}main.all .face:before{content:attr(aria-label);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#93a198;align-self:stretch}main.all .face[data-face="2"]{min-height:300px}main.all .edges{display:none}main.all .stage{padding:0}
 .face h2{display:block;font-size:13px;margin:0}.face .presets{margin:0;padding:0;border:0;border-radius:0;background:none;display:flex;flex-direction:column;gap:10px}.face .presets>small{display:block}#presets{flex-direction:column;align-items:stretch;gap:8px}#presets button{flex:none;font-size:14px;padding:12px}.face .glide-options{margin:0}
 .face .knobs{flex:1;display:grid;grid-template:1fr 1fr/1fr 1fr;margin:0;background:linear-gradient(to bottom right,transparent calc(50% - .5px),#303a34 50%,transparent calc(50% + .5px))}.face .knob-group:first-child{grid-area:1/1;align-self:start;justify-self:start}.face .knob-group:last-child{grid-area:2/2;align-self:end;justify-self:end}.face .knob{width:76px;height:76px}.face .knob-group{gap:3px}
-.face #followToggle{margin:0;font-size:15px;padding:14px;white-space:normal}#followState{font-size:20px;text-align:center}#followHint{text-align:center;color:#c5d8b3;min-height:1.4em;margin:0}.face #message{margin:0}
+.follow-row{display:flex;gap:8px}.follow-row button{flex:1;font-size:14px;padding:10px}.face #followToggle{margin:0;white-space:normal;font-size:14px;padding:10px}#followState{font-size:20px;text-align:center}#followHint{text-align:center;color:#c5d8b3;min-height:1.4em;margin:0}.face #message{margin:0}
 .face .preview{border-radius:10px;flex:none}.face #followView{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0;aspect-ratio:auto}
 #healthDetails{white-space:pre-line;font-size:11px;color:#93a198;margin:0;line-height:1.35}.face #float,.face #pipHint{margin:0}
 </style>
@@ -55,6 +58,8 @@ function axisQuat(axis,angle){const s=Math.sin(angle/2);return [...axis.map(v=>v
 function orientation(v){const k=Math.PI/180;return multiply(multiply(axisQuat([0,1,0],v.Yaw*k),axisQuat([1,0,0],v.Pitch*k)),axisQuat([0,0,1],v.Roll*k));}
 function matrix(q){const n=Math.hypot(...q),[x,y,z,w]=q.map(v=>v/n);return [1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w),2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w),2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)];}
 function angles(q){const m=matrix(q),p=Math.asin(Math.max(-1,Math.min(1,-m[5]))),regular=Math.abs(Math.cos(p))>1e-7,k=180/Math.PI;return {Pitch:p*k,Yaw:Math.atan2(regular?m[2]:-m[6],regular?m[8]:m[0])*k,Roll:regular?Math.atan2(m[3],m[4])*k:0};}
+// Camera-local aim that keeps the horizon: chained local yaw/pitch turns alone slowly roll the view over.
+function levelAim(v,yaw,pitch){const roll=angles(orientation(v)).Roll;return {...angles(multiply(orientation(v),multiply(axisQuat([0,1,0],yaw),axisQuat([1,0,0],pitch)))),Roll:roll};}
 function rotateLocal(q){if(!connected||!view)return;glide=null;followPausedUntil=performance.now()+2000;Object.assign(view,angles(multiply(orientation(view),q)));dirty=true;render();}
 function spherePoint(x,y){const d=x*x+y*y;return d<=1?[x,y,Math.sqrt(1-d)]:[x/Math.sqrt(d),y/Math.sqrt(d),0];}
 function arcRotation(a,b,gain){const cross=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],length=Math.hypot(...cross);if(length<1e-9)return [0,0,0,1];return axisQuat(cross.map(v=>v/length),Math.atan2(length,a.reduce((s,v,i)=>s+v*b[i],0))*gain);}
@@ -119,7 +124,10 @@ shell.setCompact(shell.compact);
 // Follow: head tracking on the filtered shot steers the view; two-hand push/pull zooms.
 const followButton=document.createElement('button');followButton.id='followToggle';followButton.title='Keep my face in frame · push both hands toward the camera to zoom out, pull them back to zoom in · open palms beside your face to focus on face and hands';followButton.setAttribute('aria-pressed','false');shell.compactToggle.before(followButton);
 const overlay=document.createElement('canvas');overlay.id='followView';overlay.width=480;overlay.height=240;overlay.hidden=true;overlay.setAttribute('aria-label','Follow tracking view: face, hands, and push/pull zoom meter');remote.querySelector('header').after(overlay);
-let vision,poseModel,faceModel,handModel,tracking,followRun=0,reachBaseline=null,lastDetect=0,chosenFov=null,lostSince=null,savedFov=null,focusSeen=0;
+let vision,poseModel,faceModel,handModel,tracking,followRun=0,reachBaseline=null,lastDetect=0,chosenFov=null,lostSince=null,savedFov=null,focusSeen=0,target=null;
+// Latest Follow frame, kept so a click on the tracking view can cut a template from it.
+const grab=new OffscreenCanvas(480,240),grabContext=grab.getContext('2d',{willReadFrequently:true});
+const trackMe=document.createElement('button');trackMe.textContent='◎ Track me';trackMe.title='Stop tracking the picked target and follow your face again';trackMe.hidden=true;
 const followState=document.createElement('strong');followState.id='followState';followState.setAttribute('role','status');
 const followHint=document.createElement('p');followHint.id='followHint';
 function setFollowLabel(text){followButton.textContent='◎ '+text;followState.textContent=text==='Follow'?'Off':text;}setFollowLabel('Follow');
@@ -137,7 +145,20 @@ async function loadModels(){
 function resetFollow(){reachBaseline=null;chosenFov=null;lostSince=null;savedFov=null;focusSeen=0;}
 function endFocus(){if(savedFov!==null){chosenFov=savedFov;savedFov=null;}}
 function showOverlay(show){overlay.hidden=!show;shell.fit();}
-function stopFollow(){followRun++;resetFollow();followButton.classList.remove('on');followButton.setAttribute('aria-pressed','false');setFollowLabel('Follow');followHint.textContent='';showOverlay(false);updatePreview();}
+const idleHint='Turn on Follow, then click the preview to track something other than you.';followHint.textContent=idleHint;
+function stopFollow(){followRun++;resetFollow();target=null;trackMe.hidden=true;followButton.classList.remove('on');followButton.setAttribute('aria-pressed','false');setFollowLabel('Follow');followHint.textContent=idleHint;showOverlay(false);updatePreview();}
+function clearTarget(){target=null;trackMe.hidden=true;resetFollow();if(followButton.classList.contains('on'))setFollowLabel('Following');}
+trackMe.onclick=clearTarget;
+// Click the tracking view to follow whatever is there instead of your face; right-click goes back.
+overlay.style.cursor='crosshair';
+overlay.onclick=e=>{
+ if(!tracking)return;
+ const r=overlay.getBoundingClientRect(),{width,height}=grab,point=[(e.clientX-r.left)/r.width*width,(e.clientY-r.top)/r.height*height],size=40;
+ const template=tracking.grayPatch(tracking.toGray(grabContext.getImageData(0,0,width,height)),width,height,point,size);
+ if(tracking.patchContrast(template)<8){$('message').textContent='Pick something with more detail to track.';return;}
+ $('message').textContent='';target={template,size,point,lost:0};resetFollow();trackMe.hidden=false;setFollowLabel('Tracking target');
+};
+overlay.oncontextmenu=e=>{e.preventDefault();clearTarget();};
 followButton.onclick=async()=>{
  if(followButton.classList.contains('on')){stopFollow();return;}
  const run=++followRun;followButton.classList.add('on');followButton.setAttribute('aria-pressed','true');setFollowLabel('Loading…');
@@ -166,11 +187,40 @@ function applyFollow(head,hands,aspect){
   chosenFov=Math.min(130,Math.max(10,chosenFov+zoom.step));target=chosenFov;
  }
  const aim=tracking.aimDelta(point,{fov:current,aspect,headroom}),k=Math.PI/180*tracking.aimGain(point),fov=tracking.nextFov(current,{found:true,chosen:target});
- if(aim.yaw||aim.pitch)Object.assign(view,angles(multiply(orientation(view),multiply(axisQuat([0,1,0],aim.yaw*k),axisQuat([1,0,0],aim.pitch*k)))));
- if(aim.yaw||aim.pitch||fov!==current){view.Field_Of_View=fov;dirty=true;render();}
+ const roll=tracking.rollToLevel(head.tilt);
+ if(aim.yaw||aim.pitch)Object.assign(view,levelAim(view,aim.yaw*k,aim.pitch*k));
+ if(roll)view.Roll=((view.Roll+roll+540)%360)-180;
+ if(aim.yaw||aim.pitch||roll||fov!==current){view.Field_Of_View=fov;dirty=true;render();}
  return {point,zoom,focus,focusing:!!focus};
 }
-function drawOverlay(frame,face,pose,hands,{point,zoom,focus,focusing}={}){
+// Template-match the picked target in the latest frame. The search widens while it is lost,
+// and the template drifts slowly toward confident matches so turning and zoom are absorbed.
+function trackTarget(){
+ const {width,height}=grab,gray=tracking.toGray(grabContext.getImageData(0,0,width,height));
+ const m=tracking.findTemplate(gray,width,height,target.template,target.size,target.point,target.lost?90:60);
+ const found=m.score>(target.lost?.65:.5);
+ if(found){
+  target.point=[m.x,m.y];target.lost=0;
+  if(m.score>.7){const fresh=tracking.grayPatch(gray,width,height,target.point,target.size);target.template=target.template.map((v,i)=>v*.9+fresh[i]*.1);}
+ }else target.lost++;
+ return {point:[target.point[0]/width,target.point[1]/height],found};
+}
+// Center the target; two-hand push/pull still zooms, scaled by the field of view since your face may be out of the shot.
+function applyTarget(match,hands,aspect){
+ const current=view.Field_Of_View;chosenFov??=current;
+ const zoom=tracking.zoomFromReach(reachBaseline,tracking.handReach(hands,null,{aspect,fov:current}));reachBaseline=zoom.baseline;
+ chosenFov=Math.min(130,Math.max(10,chosenFov+zoom.step));
+ const fov=tracking.nextFov(current,{found:true,chosen:chosenFov}),aim=match.found?tracking.aimDelta(match.point,{fov:current,aspect,headroom:.5}):{yaw:0,pitch:0};
+ setFollowLabel(match.found?'Tracking target':'Target lost');
+ if(aim.yaw||aim.pitch){
+  const gain=tracking.aimGain(match.point),k=Math.PI/180*gain,{width,height}=grab;
+  Object.assign(view,levelAim(view,aim.yaw*k,aim.pitch*k));
+  target.point=[target.point[0]+(width/2-target.point[0])*gain,target.point[1]+(height/2-target.point[1])*gain];
+ }
+ if(aim.yaw||aim.pitch||fov!==current){view.Field_Of_View=fov;dirty=true;render();}
+ return {...match,zoom,targeting:true};
+}
+function drawOverlay(frame,face,pose,hands,{point,zoom,focus,focusing,targeting,found}={}){
  const c=overlay.getContext('2d'),w=overlay.width,h=overlay.height;c.drawImage(frame,0,0,w,h);
  const lines=(pts,connections,color)=>{c.strokeStyle=color;c.lineWidth=2;c.beginPath();for(const {start,end}of connections){c.moveTo(pts[start].x*w,pts[start].y*h);c.lineTo(pts[end].x*w,pts[end].y*h);}c.stroke();};
  const dot=(p,color,r)=>{c.fillStyle=color;c.beginPath();c.arc(p.x*w,p.y*h,r,0,Math.PI*2);c.fill();};
@@ -179,9 +229,10 @@ function drawOverlay(frame,face,pose,hands,{point,zoom,focus,focusing}={}){
  else if(pose)pose.slice(0,11).forEach(p=>dot(p,'#88b9e2',3));
  for(const hand of hands)lines(hand,vision.HandLandmarker.HAND_CONNECTIONS,'#c2e39e'),hand.forEach(p=>dot(p,'#eff8e9',2.5));
  if(focus){const b=focus.box;c.strokeStyle='#de9c86';c.lineWidth=2;c.setLineDash([6,4]);c.strokeRect(b.x0*w,b.y0*h,(b.x1-b.x0)*w,(b.y1-b.y0)*h);c.setLineDash([]);}
- const aimY=focusing?.5:.4;c.strokeStyle='#ffffff88';c.lineWidth=1;c.strokeRect(w/2-7,h*aimY-7,14,14);
- if(point)dot({x:point[0],y:point[1]},'#de9c86',5);
- let text=focusing?'Focusing on face and hands':!point?'Looking for your face':hands.length<2?`Show both hands to zoom (${hands.length}/2)`:'Push both hands: zoom out · pull back: zoom in';
+ const aimY=focusing||targeting?.5:.4;c.strokeStyle='#ffffff88';c.lineWidth=1;c.strokeRect(w/2-7,h*aimY-7,14,14);
+ if(targeting&&point){const s=target.size/grab.width*w;c.strokeStyle=found?'#de9c86':'#fa9b8f';c.lineWidth=2;if(!found)c.setLineDash([5,4]);c.strokeRect(point[0]*w-s/2,point[1]*h-s/2,s,s);c.setLineDash([]);}
+ else if(point)dot({x:point[0],y:point[1]},'#de9c86',5);
+ let text=targeting?(found?'Tracking target · right-click to follow you again':'Target lost · click it to pick again'):focusing?'Focusing on face and hands':!point?'Looking for your face · or click something to track':hands.length<2?`Show both hands to zoom (${hands.length}/2)`:'Push both hands: zoom out · pull back: zoom in';
  c.fillStyle='#000a';c.fillRect(0,0,w,24);c.fillRect(0,h-22,w,22);
  if(zoom?.delta){
   const [l,r]=zoom.delta,push=l*r>0?Math.sign(l)*Math.min(Math.abs(l),Math.abs(r)):0,cx=w/2,scale=cx/.5;
@@ -205,11 +256,16 @@ async function followStep(run){
   if(connected){
    const r=await fetch('/api/preview?width=480');if(!r.ok)throw Error('OBS preview unavailable');
    const frame=await createImageBitmap(await r.blob()),aspect=frame.width/frame.height;
+   if(grab.width!==frame.width||grab.height!==frame.height){grab.width=frame.width;grab.height=frame.height;}
+   grabContext.drawImage(frame,0,0);
    lastDetect=Math.max(performance.now(),lastDetect+1);
-   const pose=poseModel.detectForVideo(frame,lastDetect).landmarks?.[0],hands=handModel.detectForVideo(frame,lastDetect).landmarks||[];
-   const face=findFace(frame,pose),head=(face&&tracking.headFromFace(face,aspect))||tracking.headFromPose(pose,aspect);
+   const hands=handModel.detectForVideo(frame,lastDetect).landmarks||[];
+   let pose=null,face=null,head=null;
+   if(!target){pose=poseModel.detectForVideo(frame,lastDetect).landmarks?.[0];face=findFace(frame,pose);head=(face&&tracking.headFromFace(face,aspect))||tracking.headFromPose(pose,aspect);}
    if(run===followRun){
-    let result={point:head?.point};if(followReady())result=applyFollow(head,hands,aspect);else resetFollow();
+    let result;
+    if(target){const match=trackTarget();result=followReady()?applyTarget(match,hands,aspect):{...match,targeting:true};}
+    else{result={point:head?.point};if(followReady())result=applyFollow(head,hands,aspect);else resetFollow();}
     drawOverlay(frame,face,pose,hands,result);
    }
    frame.close();
@@ -222,28 +278,66 @@ function uprightRoll(q){const m=matrix(q),turn=v=>[0,1,2].map(i=>m[3*i]*v[0]+m[3
 function cubeTransform(q){const m=matrix(q),s=[1,-1,1],v=[];for(let j=0;j<3;j++){for(let i=0;i<3;i++)v.push(+(m[3*i+j]*s[i]*s[j]).toFixed(6));v.push(0);}return 'translateZ(calc(var(--size) / -2)) matrix3d('+v.join(',')+',0,0,0,1)';}
 // Chrome misses clicks inside a rotated preserve-3d parent, so the cube rotation goes on each face.
 const faceBases=['','rotateY(90deg)','rotateY(180deg)','rotateY(-90deg)','rotateX(90deg)','rotateX(-90deg)'].map(r=>r+' translateZ(calc(var(--size) / 2))');
-function setCube(q,faces){const t=cubeTransform(q);faces.forEach((f,i)=>{f.style.transform=t+' '+faceBases[i];});}
-const faceNames=['Aim','Saved spots','Zoom & horizon','Follow','Preview','More'];
-const stage=document.createElement('div');stage.className='stage';const scene=document.createElement('div');scene.className='scene';const cube=document.createElement('div');cube.className='cube';scene.append(cube);stage.append(scene);
+// The solid: every cube edge is bent outward at its midpoint, so each seam between two faces is a
+// chevron from any angle. Each face is a low dome of eight triangles from its raised center to a
+// ring of corners and pushed-out edge midpoints. Seen face-on under the scene's 1200px
+// perspective, the seam tips land `chevronTip` px past the square, where the edge hit areas are.
+// The rise keeps each face convex (it must exceed seamPush·2a/(a−seamPush)). Controls float
+// just above each face's center.
+const cubeHalf=160,seamPush=20,cubeRise=50,cubePerspective=1200;
+const chevronTip=Math.round((cubeHalf+seamPush)*cubePerspective/(cubePerspective-seamPush)-cubeHalf);
+const panelLift=` translateZ(${cubeRise+2}px)`;
+const sub3=(a,b)=>a.map((v,i)=>v-b[i]),dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit3=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
+function solidTriangles(){
+ const a=cubeHalf,out=a+seamPush,tris=[];
+ for(const n of [[0,0,1],[1,0,0],[0,0,-1],[-1,0,0],[0,1,0],[0,-1,0]]){
+  const p=[n[2],n[0],n[1]],q=cross3(n,p),at=(f,s,t)=>[0,1,2].map(i=>n[i]*f+p[i]*s+q[i]*t);
+  const ring=[at(a,a,a),at(out,out,0),at(a,a,-a),at(out,0,-out),at(a,-a,-a),at(out,-out,0),at(a,-a,a),at(out,0,out)],center=at(a+cubeRise,0,0);
+  ring.forEach((v,i)=>tris.push([center,v,ring[(i+1)%8]]));
+ }
+ return tris;
+}
+// Place a triangle (y-up cube space, seam from its second to third point) as a clipped element:
+// matrix3d maps the element's box onto the triangle's plane in CSS space, facing outward.
+const light=unit3([-.35,.75,.55]);
+function facetFor(tri){
+ const pts=tri.map(([x,y,z])=>[x,-y,z]),[p0,p1,p2]=pts,mid=[0,1,2].map(i=>(p0[i]+p1[i]+p2[i])/3);
+ let n=unit3(cross3(sub3(p1,p0),sub3(p2,p0)));if(dot3(n,mid)<0)n=n.map(v=>-v);
+ const u=unit3(sub3(p1,p0)),v=cross3(n,u),flat=pts.map(p=>[dot3(sub3(p,p0),u),dot3(sub3(p,p0),v)]);
+ const x0=Math.min(...flat.map(f=>f[0])),y0=Math.min(...flat.map(f=>f[1])),w=Math.max(...flat.map(f=>f[0]))-x0,h=Math.max(...flat.map(f=>f[1]))-y0,local=flat.map(([x,y])=>[x-x0,y-y0]);
+ const o=[0,1,2].map(i=>p0[i]+u[i]*x0+v[i]*y0),f=x=>+x.toFixed(4);
+ const el=document.createElement('div');el.className='facet';el.setAttribute('aria-hidden','true');
+ const g=Math.round(14+34*Math.max(0,dot3([n[0],-n[1],n[2]],light)));el.style.setProperty('--shade',`rgb(${g},${g+5},${g+3})`);
+ el.style.width=w+'px';el.style.height=h+'px';el.style.clipPath='polygon('+local.map(([x,y])=>`${f(x)}px ${f(y)}px`).join(',')+')';
+ const [c,s,e]=local.map(([x,y])=>`${f(x)},${f(y)}`);
+ el.innerHTML=`<svg width="${w}" height="${h}"><polyline points="${s} ${c} ${e}"/><line x1="${s.split(',')[0]}" y1="${s.split(',')[1]}" x2="${e.split(',')[0]}" y2="${e.split(',')[1]}"/></svg>`;
+ return {el,matrix:`matrix3d(${[...u,0,...v,0,...n,0,...o,1].map(f).join(',')})`};
+}
+function setCube(q,faces){const t=cubeTransform(q);faces.forEach((f,i)=>{f.style.transform=t+' '+faceBases[i]+panelLift;});facets.forEach(({el,matrix})=>{el.style.transform=t+' '+matrix;});}
+const faceNames=['Aim','Saved spots','Zoom & horizon','Follow','Status','More'];
+const stage=document.createElement('div');stage.className='stage';stage.style.setProperty('--size',2*cubeHalf+'px');
+const scene=document.createElement('div');scene.className='scene';const cube=document.createElement('div');cube.className='cube';scene.append(cube);stage.append(scene);
+const facets=solidTriangles().map(facetFor);facets.forEach(({el})=>cube.append(el));
 const faces=faceNames.map((name,i)=>{const f=document.createElement('section');f.className='face';f.dataset.face=i;f.setAttribute('aria-label',name);cube.append(f);return f;});
 const faceName=document.createElement('span');faceName.className='face-name';faceName.setAttribute('aria-live','polite');scene.append(faceName);
 const homeButton=$('home');ballArea.style.marginBottom='0';faces[0].append(ballArea);
 faces[1].append(saved);
 faces[2].append(knobs);
-const followAbout=document.createElement('small');followAbout.textContent='Keeps your face in frame. Push both hands toward the camera to zoom out, pull back to zoom in. Open palms beside your face to frame face and hands.';
-faces[3].append(followButton,followState,followHint,$('message'),followAbout);
 const previewBox=document.createElement('div');previewBox.className='preview';previewBox.innerHTML='<span class="muted">Preview appears here</span><img id="preview" alt="Live filtered X5 camera preview">';previewBox.append(overlay);
-const previewNote=document.createElement('small');previewNote.textContent='Filtered X5 shot · face and hand tracking appear while Follow is on.';
-faces[4].append(previewBox,previewNote);
-const healthHeading=document.createElement('h2');healthHeading.textContent='Status';
-faces[5].append(homeButton,$('speed').parentElement,$('angles').parentElement,healthHeading,healthText,$('float'),$('pipHint'));
+const followRow=document.createElement('div');followRow.className='follow-row';followRow.append(followButton,trackMe);
+faces[3].append(previewBox,followRow,followHint,$('message'));
+faces[4].append(healthText,$('float'),$('pipHint'));
+faces[5].append(homeButton,$('speed').parentElement,$('angles').parentElement);
 layout.replaceWith(stage);
 // The cube outline: each side is a chevron pointing outward, colored by connection status, and turns the cube toward it.
 const edgeSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');edgeSvg.classList.add('edges');edgeSvg.setAttribute('viewBox','-16 -16 352 352');scene.append(edgeSvg);
-const chevrons=[['up','Up',[1,0,0],1,'2,2 160,-12 318,2'],['right','Right',[0,1,0],-1,'318,2 332,160 318,318'],['down','Down',[1,0,0],-1,'318,318 160,332 2,318'],['left','Left',[0,1,0],1,'2,318 -12,160 2,2']].map(([side,label,axis,sign,points])=>{
+const chevrons=[['up','Up',[1,0,0],1,`0,0 160,${-chevronTip} 320,0`],['right','Right',[0,1,0],-1,`320,0 ${320+chevronTip},160 320,320`],['down','Down',[1,0,0],-1,`320,320 160,${320+chevronTip} 0,320`],['left','Left',[0,1,0],1,`0,320 ${-chevronTip},160 0,0`]].map(([side,label,axis,sign,points])=>{
  const b=document.createElementNS('http://www.w3.org/2000/svg','g');b.setAttribute('class','edge edge-'+side);b.setAttribute('role','button');b.setAttribute('tabindex','0');
  b.innerHTML=`<title></title><polyline class="edge-hit" points="${points}"/><polyline class="edge-line" points="${points}"/>`;
- b.onclick=()=>turnCube(axis,sign);b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();turnCube(axis,sign);}};
+ b.onclick=()=>{if(b.suppressClick){b.suppressClick=false;return;}turnCube(axis,sign);};
+ b.onpointerdown=e=>{if(turning||allView||e.button!==0)return;b.setPointerCapture(e.pointerId);b.suppressClick=false;cubeDrag={id:e.pointerId,b,x0:e.clientX,y0:e.clientY,x:e.clientX,y:e.clientY,q:cubeQ,moved:false};};
+ b.onpointermove=e=>dragCube(e);b.onpointerup=b.onpointercancel=e=>dropCube(e);
+ b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();turnCube(axis,sign);}};
  edgeSvg.append(b);return {b,label,axis,sign};
 });
 let cubeQ=[0,0,0,1],cubeFace=0,turning=false,allView=false;const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -261,15 +355,42 @@ function showFace(face){
 }
 // A 90° turn in screen space, plus a roll about the view axis when the arriving face would land tilted.
 function turnCube(axis,sign){
- if(turning||allView)return;stop();dragBall=null;
- const turned=multiply(axisQuat(axis,sign*Math.PI/2),cubeQ),{face,roll}=uprightRoll(turned),from=cubeQ,to=multiply(axisQuat([0,0,1],roll),turned);
- cubeQ=to;cubeFace=face;turning=true;scene.classList.add('turning');faces.forEach(f=>{f.inert=true;});
- const w=shell.activeWindow(),start=performance.now(),duration=reduceMotion.matches?0:420;
- const frame=()=>{const t=duration?Math.min(1,(performance.now()-start)/duration):1;setCube(t<1?slerp(from,to,t*t*(3-2*t)):to,faces);if(t<1)w.requestAnimationFrame(frame);else{turning=false;scene.classList.remove('turning');showFace(face);}};
+ if(turning||allView)return;
+ const turned=multiply(axisQuat(axis,sign*Math.PI/2),cubeQ),{face,roll}=uprightRoll(turned);
+ settleCube(cubeQ,multiply(axisQuat([0,0,1],roll),turned),face,420);
+}
+function startTurn(){stop();dragBall=null;turning=true;scene.classList.add('turning');faces.forEach(f=>{f.inert=true;});}
+function settleCube(from,to,face,duration){
+ if(!turning)startTurn();cubeQ=to;cubeFace=face;
+ const w=shell.activeWindow(),start=performance.now();if(reduceMotion.matches)duration=0;
+ const frame=()=>{const t=duration?Math.min(1,(performance.now()-start)/duration):1;setCube(t<1?slerp(from,to,t*t*(3-2*t)):to,faces);if(t<1)w.requestAnimationFrame(frame);else{turning=false;scene.classList.remove('turning','dragging');showFace(face);}};
  frame();
 }
+// Press and drag an edge to spin the cube freely, a face width per quarter turn; on release it
+// snaps to whichever face is most toward you, upright. A press that barely moves is a click.
+let cubeDrag=null;
+function snapCube(q){
+ const face=uprightRoll(q).face,quarter=k=>k*Math.PI/2;let best=null,bestDot=-1;
+ for(const a of [0,1,2,3])for(const b of [0,1,2,3])for(const c of [0,1,2,3]){
+  const cand=multiply(axisQuat([1,0,0],quarter(a)),multiply(axisQuat([0,1,0],quarter(b)),axisQuat([0,0,1],quarter(c)))),d=Math.abs(cand.reduce((s,v,i)=>s+v*q[i],0));
+  if(d>bestDot&&uprightRoll(cand).face===face){bestDot=d;best=cand;}
+ }
+ return {face,to:multiply(axisQuat([0,0,1],uprightRoll(best).roll),best)};
+}
+function dragCube(e){
+ if(!cubeDrag||e.pointerId!==cubeDrag.id)return;
+ const dx=e.clientX-cubeDrag.x,dy=e.clientY-cubeDrag.y;
+ if(!cubeDrag.moved){if(Math.hypot(e.clientX-cubeDrag.x0,e.clientY-cubeDrag.y0)<5)return;cubeDrag.moved=true;startTurn();scene.classList.add('dragging');}
+ cubeDrag.x=e.clientX;cubeDrag.y=e.clientY;const len=Math.hypot(dx,dy);if(!len)return;
+ const q=multiply(axisQuat([dy/len,dx/len,0],len/scene.offsetWidth*Math.PI/2),cubeDrag.q),n=Math.hypot(...q);
+ cubeDrag.q=q.map(v=>v/n);setCube(cubeDrag.q,faces);
+}
+function dropCube(e){
+ if(!cubeDrag||e.pointerId!==cubeDrag.id)return;const drag=cubeDrag;cubeDrag=null;
+ if(!drag.moved)return;drag.b.suppressClick=true;const {face,to}=snapCube(drag.q);settleCube(drag.q,to,face,300);
+}
 let previewOn=false,previewUrl=null;
-const previewActive=()=>(allView||cubeFace===4)&&!turning&&!followButton.classList.contains('on');
+const previewActive=()=>(allView||cubeFace===3)&&!turning&&!followButton.classList.contains('on');
 function updatePreview(){if(previewActive()&&!previewOn){previewOn=true;pollPreview();}}
 async function pollPreview(){
  const started=performance.now();

@@ -71,16 +71,16 @@ The remote discovers the filter by this filename. Use one matching source/filter
 
 ## Controls
 
-The remote is a cube with one group of controls per face. Its four edges are outward-pointing chevrons: click an edge (or focus it and press Enter) to turn the cube that way, a face at a time; each face turns upright as it arrives. The current face's name is in the top-left corner. Hover the top-right corner for **▦ All**, which lays every face out flat so all controls show at once; **◆ Cube** goes back. The choice is remembered in the browser. The edge color is the connection status: grey while connecting, green when OBS and the camera checks pass, red when something needs attention.
+The remote is a cube with one group of controls per face. Every edge of the solid is a chevron bent outward at its midpoint, from any angle, and each face is a low dome that meets its neighbors along those seams. The controls float just above each face, each on its own pad that glows in the status color when you hover. Use the edges to turn: click an edge (or focus it and press Enter) to turn the cube that way, a face at a time; each face turns upright as it arrives. Or press and drag an edge to spin the cube freely; when you let go it snaps to whichever face is most toward you, upright. The current face's name is in the top-left corner. Hover the top-right corner for **▦ All**, which lays every face out flat so all controls show at once; **◆ Cube** goes back. The choice is remembered in the browser. The edge color is the connection status: grey while connecting, green when OBS and the camera checks pass, red when something needs attention.
 
 | Face | Contents |
 | --- | --- |
 | Aim | Trackball with aim and roll buttons |
 | Saved spots | Three saved spots, glide speed, and easing |
 | Zoom & horizon | Zoom and horizon knobs, on a diagonal |
-| Follow | Follow button, tracking state, and messages |
-| Preview | Live filtered shot, with the tracking overlay while Follow is on |
-| More | Reset view, movement speed, pan/tilt readout, status details, and Float |
+| Follow | Live filtered shot, Follow and Track me buttons, tracking hints, and messages |
+| Status | OBS and camera check details, and Float |
+| More | Reset view, movement speed, and pan/tilt readout |
 
 | Control | Action |
 | --- | --- |
@@ -94,7 +94,7 @@ The remote is a cube with one group of controls per face. Its four edges are out
 | Empty saved spot | Save current framing |
 | Saved spot click | Glide to that framing |
 | Hold a spot / right-click / Shift-click | Rename or replace with current view |
-| Cube edges | Turn to the next face up, down, left, or right |
+| Cube edges | Click to turn to the next face up, down, left, or right; drag to spin and snap to the nearest face |
 | ▦ All / ◆ Cube (top-right corner) | Show every control at once, or go back to the cube |
 
 Glide duration: Cut, ½s, 1½s, 3s, or 5s. Easing: Linear, Smooth in/out, or Ease out. Rotation follows shortest-path quaternion interpolation, with zoom interpolated alongside it. Manual movement interrupts a glide.
@@ -103,9 +103,13 @@ Presets and preferences live in browser localStorage, not OBS or Git. Different 
 
 ## Follow and hand zoom
 
-Click **◎ Follow** on the Follow face to keep yourself in frame. About eight times a second the remote grabs a small screenshot of the filtered X5 shot from OBS, finds your face, and nudges yaw and pitch to keep you centered with a little headroom. Only your head is needed, so sitting at a desk with your body cropped works. Follow aims between your eyes, nudged slightly toward the nose. MediaPipe Pose Landmarker (lite) first locates your head, which works when you are small in the shot, turned at an angle, or wearing a hat. MediaPipe Face Landmarker then reads a close crop around your head. On its own the face model misses faces that are small or turned, and the crop fixes that. If the face model still misses, Follow uses the pose model's nose, eye, and ear points. The face thresholds are set low enough that a hat covering your forehead still counts. It turns faster when you are near the edge of the shot. Horizon roll is left as you set it. A small dead zone keeps the camera from hunting.
+Click **◎ Follow** on the Follow face to keep yourself in frame. About eight times a second the remote grabs a small screenshot of the filtered X5 shot from OBS, finds your face, and nudges yaw and pitch to keep you centered with a little headroom. Only your head is needed, so sitting at a desk with your body cropped works. Follow aims between your eyes, nudged slightly toward the nose. MediaPipe Pose Landmarker (lite) first locates your head, which works when you are small in the shot, turned at an angle, or wearing a hat. MediaPipe Face Landmarker then reads a close crop around your head. On its own the face model misses faces that are small or turned, and the crop fixes that. If the face model still misses, Follow uses the pose model's nose, eye, and ear points. The face thresholds are set low enough that a hat covering your forehead still counts. It turns faster when you are near the edge of the shot. Follow also rolls the view to keep your head upright, so a camera mounted on its side or upside down still shows you the right way up; a head tilt under about 12° is left alone. A small dead zone keeps the camera from hunting.
 
-While Follow is on, the Preview face shows a tracking view, and the Follow face shows the tracking state and hints. It shows what the model sees: your face outline, eyes, and lips in blue (or blue dots for nose, eyes, and ears when only the pose model has you), each detected hand in green, your tracked point in orange, and a box marking where Follow aims. The bar along the bottom is the push/pull meter. The white ticks are the thresholds; it turns orange when zooming out and blue when zooming in. The tracking view only appears in the remote, never in OBS.
+While Follow is on, the preview on the Follow face becomes a tracking view.
+
+To follow something other than you, click it in the tracking view. Follow cuts a small patch around the click, finds it again in each frame by template matching, and keeps it centered. The patch slowly updates itself as the object turns or the zoom changes. A dashed red box means the target was lost; click it again to re-pick. Right-click the tracking view, or click **◎ Track me**, to go back to following your face. A blank area with no detail cannot be picked. While a target is tracked, two-hand push/pull zoom still works without your face: palm size is corrected for the current field of view instead of compared to your eyes. Your hands still have to be in the shot.
+
+The tracking view shows what the model sees: your face outline, eyes, and lips in blue (or blue dots for nose, eyes, and ears when only the pose model has you), each detected hand in green, your tracked point in orange, and a box marking where Follow aims. The bar along the bottom is the push/pull meter. The white ticks are the thresholds; it turns orange when zooming out and blue when zooming in. The tracking view only appears in the remote, never in OBS.
 
 Zoom with both hands, palms facing the camera:
 
@@ -118,9 +122,9 @@ To focus on your face and hands, hold both hands up beside your face, palms open
 
 If you leave the shot, for example by standing up in a tight frame, Follow waits briefly and then widens to about 100° (**Searching…**) to find you. Once it has you again, it eases back to your zoom. If you are still not found at full width, it shows **Holding**. Follow only sees the current shot and does not search the rest of the 360° sphere. Manual aiming, zoom, and saved-spot glides pause Follow for two seconds. The models, wasm runtime, and JavaScript bundle (Apache-2.0, `@mediapipe/tasks-vision` 1.1.0) are vendored in `controller/vendor/mediapipe/` and served locally; nothing is sent to Google or any other service. The first click takes a few seconds to load about 30 MB of model files.
 
-Click **Float above other windows** on the More face to open the cube in PiP. Keep the originating tab open. Browser/OS minimum window sizes may limit how small it can become. Keyboard shortcuts require focus in the remote; they are not global OBS hotkeys.
+Click **Float above other windows** on the Status face to open the cube in PiP. Keep the originating tab open. Browser/OS minimum window sizes may limit how small it can become. Keyboard shortcuts require focus in the remote; they are not global OBS hotkeys.
 
-The cube edges are green when device availability, configured capture mode, and enabled filter checks pass; red means attention is needed. The More face lists the details. It polls every three seconds. It does not verify frame freshness, image quality, or successful shader compilation.
+The cube edges are green when device availability, configured capture mode, and enabled filter checks pass; red means attention is needed. The Status face lists the details. It polls every three seconds. It does not verify frame freshness, image quality, or successful shader compilation.
 
 ## Architecture and security
 

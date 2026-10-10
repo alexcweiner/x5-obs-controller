@@ -8,6 +8,9 @@ const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
 const span=(a,b,aspect)=>Math.hypot((a.x-b.x)*aspect,a.y-b.y);
 const dist=(pts,a,b,aspect)=>span(pts[a],pts[b],aspect);
 const aimAt=(eyes,nose)=>eyes?[eyes.x*.7+nose.x*.3,eyes.y*.7+nose.y*.3]:[nose.x,nose.y];
+// Clockwise on-screen head tilt in degrees from the eyes-to-mouth line: 0 upright, ±180 upside down.
+// Unlike the eye line it needs no left/right labels and holds when the head turns sideways.
+const headTilt=(eyes,mouth,aspect)=>eyes&&mouth?Math.atan2(-(mouth.x-eyes.x)*aspect,mouth.y-eyes.y)*180/Math.PI:null;
 function bounds(pts){
  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
  for(const p of pts)if(p){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);}
@@ -33,15 +36,23 @@ export function fromCrop(landmarks,crop,{width,height}){return landmarks.map(p=>
 export function headFromFace(face,aspect){
  const nose=face?.[NOSE_TIP];if(!nose)return null;
  const eyes=face[EYE_A]&&face[EYE_B]?mid(face[EYE_A],face[EYE_B]):null,mouth=face[LIP_TOP]&&face[LIP_BOTTOM]?mid(face[LIP_TOP],face[LIP_BOTTOM]):null;
- return {source:'face',point:aimAt(eyes,nose),noseX:nose.x,box:bounds(face),scale:eyes&&mouth?span(eyes,mouth,aspect):0};
+ return {source:'face',point:aimAt(eyes,nose),noseX:nose.x,box:bounds(face),scale:eyes&&mouth?span(eyes,mouth,aspect):0,tilt:headTilt(eyes,mouth,aspect)};
 }
 
 // Fallback from the pose model's nose, eyes, ears, and mouth when the face model misses.
 export function headFromPose(pose,aspect,minVisibility=.3){
  const head=pose?.slice(0,11);if(head?.length!==11||!visible(head[P_NOSE],minVisibility))return null;
- const nose=head[P_NOSE],eyes=mid(head[P_LEFT_EYE],head[P_RIGHT_EYE]),scale=span(eyes,mid(head[P_MOUTH_LEFT],head[P_MOUTH_RIGHT]),aspect);
+ const nose=head[P_NOSE],eyes=mid(head[P_LEFT_EYE],head[P_RIGHT_EYE]),mouth=mid(head[P_MOUTH_LEFT],head[P_MOUTH_RIGHT]),scale=span(eyes,mouth,aspect);
  const b=bounds(head),cx=(b.x0+b.x1)/2,half=Math.max((b.x1-b.x0)/2+.2*scale/aspect,.8*scale/aspect);
- return {source:'pose',point:aimAt(eyes,nose),noseX:nose.x,box:{x0:cx-half,y0:eyes.y-1.1*scale,x1:cx+half,y1:eyes.y+1.6*scale},scale};
+ return {source:'pose',point:aimAt(eyes,nose),noseX:nose.x,box:{x0:cx-half,y0:eyes.y-1.1*scale,x1:cx+half,y1:eyes.y+1.6*scale},scale,tilt:headTilt(eyes,mouth,aspect)};
+}
+
+// Degrees of view Roll that straighten a tilted head; positive Roll turns the picture
+// counterclockwise. The deadzone leaves a cocked head alone, and the step is capped so
+// an upside-down start turns over smoothly instead of snapping.
+export function rollToLevel(tilt,{dead=12,gain=.3,maxStep=8}={}){
+ if(tilt==null||Math.abs(tilt)<dead)return 0;
+ return Math.max(-maxStep,Math.min(maxStep,tilt*gain));
 }
 
 // Degrees of local yaw/pitch that move `point` to the headroom line.
@@ -70,11 +81,52 @@ export function openPalm(hand,aspect){
 }
 
 // Log palm size for two hands (left to right in the image), relative to the head scale
-// so zooming does not read as a push. No head, no reach.
-export function handReach(hands,head,{aspect}){
- if(!hands||hands.length<2||!(head?.scale>=.005))return null;
+// so zooming does not read as a push. Without a head, `fov` stands in: apparent size
+// scales with 1/tan(fov/2), so palm size times tan(fov/2) holds still while zooming.
+export function handReach(hands,head,{aspect,fov}){
+ if(!hands||hands.length<2)return null;
  const pair=[...hands].sort((a,b)=>a[WRIST].x-b[WRIST].x).slice(0,2);
- return {kind:head.source,values:pair.map(h=>Math.log(palmSize(h,aspect)/head.scale))};
+ if(head?.scale>=.005)return {kind:head.source,values:pair.map(h=>Math.log(palmSize(h,aspect)/head.scale))};
+ if(!(fov>0))return null;
+ const t=Math.tan(fov*Math.PI/360);
+ return {kind:'view',values:pair.map(h=>Math.log(palmSize(h,aspect)*t))};
+}
+
+// Luma of RGBA pixels, one float per pixel.
+export function toGray({data,width,height}){
+ const g=new Float32Array(width*height);
+ for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=.299*data[j]+.587*data[j+1]+.114*data[j+2];
+ return g;
+}
+
+// Square patch of `size` pixels centered on (cx,cy), kept inside the image.
+export function grayPatch(gray,width,height,[cx,cy],size){
+ const x0=Math.round(Math.max(0,Math.min(width-size,cx-size/2))),y0=Math.round(Math.max(0,Math.min(height-size,cy-size/2))),p=new Float32Array(size*size);
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++)p[y*size+x]=gray[(y0+y)*width+x0+x];
+ return p;
+}
+
+// Spread of a patch; a flat patch (blank wall) cannot be tracked.
+export function patchContrast(p){let sum=0,sq=0;for(const v of p){sum+=v;sq+=v*v;}const mean=sum/p.length;return Math.sqrt(Math.max(0,sq/p.length-mean*mean));}
+
+// Best zero-mean normalized cross-correlation match for `template` within `radius` pixels
+// of (cx,cy): a coarse scan, then a one-pixel refine. Score is -1..1; returns the match center.
+export function findTemplate(gray,width,height,template,size,[cx,cy],radius){
+ const n=size*size;let tSum=0,tSq=0;for(const v of template){tSum+=v;tSq+=v*v;}
+ const tMean=tSum/n,tVar=tSq-n*tMean*tMean;
+ const score=(x0,y0)=>{
+  let s=0,sum=0,sq=0;
+  for(let y=0;y<size;y++){const row=(y0+y)*width+x0,t=y*size;for(let x=0;x<size;x++){const v=gray[row+x];sum+=v;sq+=v*v;s+=v*template[t+x];}}
+  const mean=sum/n,iVar=sq-n*mean*mean;
+  return iVar<1e-6||tVar<1e-6?0:(s-n*mean*tMean)/Math.sqrt(iVar*tVar);
+ };
+ const cxl=x=>Math.max(0,Math.min(width-size,x)),cyl=y=>Math.max(0,Math.min(height-size,y));
+ let best={score:-2,x:0,y:0};
+ const scan=(xa,xb,ya,yb,step)=>{for(let y=ya;y<=yb;y+=step)for(let x=xa;x<=xb;x+=step){const s=score(x,y);if(s>best.score)best={score:s,x,y};}};
+ const ox=Math.round(cx-size/2),oy=Math.round(cy-size/2);
+ scan(cxl(ox-radius),cxl(ox+radius),cyl(oy-radius),cyl(oy+radius),3);
+ scan(cxl(best.x-2),cxl(best.x+2),cyl(best.y-2),cyl(best.y+2),1);
+ return {x:best.x+size/2,y:best.y+size/2,score:best.score};
 }
 
 // Field-of-view step from a two-hand push (positive, zoom out) or pull (negative, zoom in).
